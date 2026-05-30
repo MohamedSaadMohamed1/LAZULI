@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { getFirestore, collection, doc, getDocs, addDoc, updateDoc, setDoc, getDoc, query, where, deleteDoc } from 'firebase/firestore';
 
 // Environment variables
@@ -231,6 +231,15 @@ const mockAuth = {
     this.currentUser = null;
     localStorage.removeItem('mock_current_user');
     this.authListeners.forEach(l => l(null));
+  },
+
+  async signInWithGoogle() {
+    await delay(MOCK_DELAY);
+    const newUser = { uid: 'mock_google_uid', email: 'google-client@lazuli.com', name: 'Google Client' };
+    this.currentUser = newUser;
+    localStorage.setItem('mock_current_user', JSON.stringify(newUser));
+    this.authListeners.forEach(l => l(newUser));
+    return { user: newUser };
   }
 };
 
@@ -338,7 +347,39 @@ const mockDb = {
 // ----------------------------------------------------
 export const isMockMode = isMock;
 
-export const authInstance = isMock ? mockAuth : auth;
+const realAuthWrapper = {
+  get currentUser() {
+    return auth ? auth.currentUser : null;
+  },
+  onAuthStateChanged(callback) {
+    if (!auth) return () => {};
+    return onAuthStateChanged(auth, (user) => {
+      if (user) {
+        user.name = user.displayName || user.email.split('@')[0];
+      }
+      callback(user);
+    });
+  },
+  async signInWithEmailAndPassword(email, password) {
+    if (!auth) throw new Error("Auth not initialized");
+    return signInWithEmailAndPassword(auth, email, password);
+  },
+  async createUserWithEmailAndPassword(email, password) {
+    if (!auth) throw new Error("Auth not initialized");
+    return createUserWithEmailAndPassword(auth, email, password);
+  },
+  async signOut() {
+    if (!auth) return;
+    return signOut(auth);
+  },
+  async signInWithGoogle() {
+    if (!auth) throw new Error("Auth not initialized");
+    const provider = new GoogleAuthProvider();
+    return signInWithPopup(auth, provider);
+  }
+};
+
+export const authInstance = isMock ? mockAuth : realAuthWrapper;
 
 export const getFirestoreDb = () => {
   if (isMock) {
