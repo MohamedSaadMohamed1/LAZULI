@@ -160,7 +160,7 @@ export default function Checkout({
 
   if (placedOrder) {
     return (
-      <div className="order-success-wrap section-container max-w-2xl mx-auto py-16 px-6 mt-[80px]">
+      <div className="order-success-wrap section-container max-w-2xl mx-auto py-16 px-6 mt-20">
         <div className="success-card bg-white border border-[#EAE3D9] p-8 md:p-12 text-center shadow-lg text-[#1C1A17]">
           <CheckCircle size={64} className="success-icon text-brand-gold mx-auto mb-6" />
           <h2 className="text-3xl font-serif mb-2">{t('thankYou')}</h2>
@@ -249,7 +249,7 @@ export default function Checkout({
 
   return (
     <>
-      <div className="checkout-page-wrap section-container max-w-7xl mx-auto py-12 px-6 mt-[80px]">
+      <div className="checkout-page-wrap section-container max-w-7xl mx-auto py-12 px-6 mt-20">
         
         {/* Back Link */}
         <button 

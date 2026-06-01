@@ -298,7 +298,7 @@ export default function AdminPanel({ allProducts, onRefreshProducts, t, lang, ge
   }, [allProducts, productSearch, lang]);
 
   return (
-    <Layout className="min-h-screen bg-[#FAF9F6] text-[#1C1A17] mt-[80px]">
+    <Layout className="min-h-screen bg-[#FAF9F6] text-[#1C1A17] mt-20">
       
       {/* Sider Sidebar Navigation */}
       <Sider 

@@ -79,7 +79,7 @@ export default function Orders({ setCurrentTab, t, lang, getBilingualValue }) {
 
   return (
     <>
-      <div className="orders-page-wrap section-container max-w-4xl mx-auto py-12 px-6 mt-[80px]">
+      <div className="orders-page-wrap section-container max-w-4xl mx-auto py-12 px-6 mt-20">
         <div className="orders-header mb-12">
           <span className="section-subtitle text-xs uppercase tracking-widest text-brand-gold font-bold mb-1 block">
             {t('customerPortal')}
