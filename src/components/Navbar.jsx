@@ -136,7 +136,7 @@ export default function Navbar({
             : 'bg-transparent border-b border-white/10 text-[#FAF8F5]'
         }`}
       >
-        <div className="max-w-7xl h-full mx-auto grid grid-cols-3 items-center px-8 md:px-12">
+        <div className="max-w-7xl h-full mx-auto grid grid-cols-3 items-center" style={{ paddingLeft: 'clamp(24px, 5vw, 64px)', paddingRight: 'clamp(24px, 5vw, 64px)' }}>
           
           {/* Column 1: Links (Desktop) or Hamburger (Mobile) */}
           <div className="flex items-center justify-start h-full">
@@ -326,7 +326,7 @@ export default function Navbar({
             
             {/* Bilingual Toggle Button! */}
             <button 
-              className="hidden md:inline-flex items-center gap-1.5 bg-transparent border border-current/30 px-3 py-1 text-[11px] font-semibold tracking-wider uppercase cursor-pointer hover:text-[#C4A478] hover:border-[#C4A478] transition-all font-sans" 
+              className="hidden xl:inline-flex items-center gap-1.5 bg-transparent border border-current/30 px-3 py-1 text-[11px] font-semibold tracking-wider uppercase cursor-pointer hover:text-[#C4A478] hover:border-[#C4A478] transition-all font-sans" 
               onClick={toggleLanguage}
             >
               <span>🌐 {lang === 'EN' ? 'العربية' : 'English'}</span>
@@ -342,7 +342,7 @@ export default function Navbar({
 
             {/* Wishlist Icon */}
             <button 
-              className="hidden md:inline-flex bg-transparent border-none text-current cursor-pointer relative p-1 transition-colors hover:text-[#C4A478] items-center justify-center" 
+              className="hidden xl:inline-flex bg-transparent border-none text-current cursor-pointer relative p-1 transition-colors hover:text-[#C4A478] items-center justify-center" 
               onClick={() => { setSelectedCategory('All'); setSelectedCollection('All'); setCurrentTab('Shop'); }}
             >
               <Badge count={favorites.length} size="small" offset={[2, -4]} color="#C4A478">
@@ -353,14 +353,14 @@ export default function Navbar({
             {/* User Profile Menu */}
             {user ? (
               <Dropdown overlay={profileMenu} trigger={['click']} placement="bottomRight">
-                <button className="hidden md:inline-flex bg-transparent border-none text-current cursor-pointer relative p-1 transition-colors hover:text-[#C4A478] items-center justify-center">
+                <button className="hidden xl:inline-flex bg-transparent border-none text-current cursor-pointer relative p-1 transition-colors hover:text-[#C4A478] items-center justify-center">
                   <User size={20} />
                   <span className="absolute bottom-1 right-1 w-1.5 h-1.5 bg-[#C4A478] rounded-full"></span>
                 </button>
               </Dropdown>
             ) : (
               <button 
-                className="hidden md:inline-flex bg-transparent border-none text-current cursor-pointer relative p-1 transition-colors hover:text-[#C4A478] items-center justify-center" 
+                className="hidden xl:inline-flex bg-transparent border-none text-current cursor-pointer relative p-1 transition-colors hover:text-[#C4A478] items-center justify-center" 
                 onClick={() => setAuthOpen(true)}
               >
                 <User size={20} />
