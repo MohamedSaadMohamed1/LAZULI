@@ -255,18 +255,22 @@ export default function Shop({
   return (
     <>
       {/* Editorial Header */}
-      <section className="shop-header bg-[#FAF8F4] border-b border-[#EAE3D9] py-20 px-8 text-center mt-[80px]">
-        <div className="shop-header-content max-w-xl mx-auto">
-          <span className="section-subtitle text-xs uppercase tracking-widest text-brand-gold font-bold mb-1 block">
+      <section className="bg-[#FAF8F4] border-b border-[#EAE3D9] py-16 md:py-24 px-6 md:px-8 text-center mt-20">
+        <div className="max-w-2xl mx-auto flex flex-col items-center justify-center text-center">
+          <span className="text-[11px] uppercase tracking-[0.2em] text-[#C4A478] font-bold mb-2 block w-full text-center">
             {t('fineCatalog')}
           </span>
-          <h2 className="text-4xl font-serif text-[#1C1A17] mb-3">{t('jewelryStore')}</h2>
-          <p className="text-sm text-[#706C66] leading-relaxed">{t('jewelryStoreDesc')}</p>
+          <h2 className="font-serif text-3xl md:text-5xl font-medium text-[#1C1A17] mb-4 w-full text-center">
+            {t('jewelryStore')}
+          </h2>
+          <p className="text-xs md:text-sm text-[#706C66] leading-relaxed max-w-lg font-sans w-full text-center">
+            {t('jewelryStoreDesc')}
+          </p>
         </div>
       </section>
 
       {/* MOBILE BAR FOR FILTER CONTROLS (Sticky) */}
-      <div className="mobile-filter-bar lg:hidden sticky top-[80px] bg-white/95 backdrop-blur-md border-b border-[#EAE3D9] py-3 px-6 z-40 flex items-center justify-between shadow-sm">
+      <div className="mobile-filter-bar lg:hidden sticky top-20 bg-white/95 backdrop-blur-md border-b border-[#EAE3D9] py-3 px-6 z-40 flex items-center justify-between shadow-sm">
         <Button 
           onClick={() => setIsFilterDrawerOpen(true)}
           className="flex items-center gap-2 h-10 px-4 border-[#C4A478] text-[#1C1A17] font-semibold text-xs uppercase tracking-widest rounded-none"
