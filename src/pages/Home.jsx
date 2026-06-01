@@ -184,16 +184,16 @@ export default function Home({
 
         .hero-content {
           max-width: 700px;
-          margin-left: calc((100vw - 1400px) / 2 + 2rem);
+          margin-left: calc((100vw - 1280px) / 2 + 2rem);
           animation: fade-in-up 1s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .rtl-active .hero-content {
           margin-left: 0;
-          margin-right: calc((100vw - 1400px) / 2 + 2rem);
+          margin-right: calc((100vw - 1280px) / 2 + 2rem);
         }
 
-        @media (max-width: 1400px) {
+        @media (max-width: 1280px) {
           .hero-content {
             margin-left: 2rem;
           }
@@ -252,7 +252,7 @@ export default function Home({
         }
 
         .pillars-container {
-          max-width: 1400px;
+          max-width: 1280px;
           margin: 0 auto;
           display: grid;
           grid-template-columns: repeat(3, 1fr);
@@ -372,7 +372,7 @@ export default function Home({
 
         /* Heritage Section */
         .heritage-section {
-          max-width: 1400px;
+          max-width: 1280px;
           margin: 0 auto;
           padding: 8rem 2rem;
           display: flex;

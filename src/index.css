@@ -229,7 +229,7 @@ button, input, select, textarea {
 
 /* Sections & Grid Systems */
 .section-container {
-  max-width: 1400px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: clamp(3rem, 7vw, 6rem) 2rem;
 }
