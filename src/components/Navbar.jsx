@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Badge, AutoComplete, Input, Dropdown, Menu, Space } from 'antd';
-import { ShoppingBag, Search, User, Menu as MenuIcon, X, Heart, Settings, Languages, Compass } from 'lucide-react';
+import { Badge, AutoComplete, Dropdown, Menu } from 'antd';
+import { ShoppingBag, Search, User, Menu as MenuIcon, X, Heart, Settings } from 'lucide-react';
 import { authInstance } from '../firebase/config';
 
 export default function Navbar({ 
@@ -23,7 +23,6 @@ export default function Navbar({
   const [searchOptions, setSearchOptions] = useState([]);
   const [user, setUser] = useState(null);
 
-  // Monitor scrolling to add shadow/white background on demand
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -32,7 +31,6 @@ export default function Navbar({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Monitor auth state changes
   useEffect(() => {
     const unsubscribe = authInstance.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
@@ -66,7 +64,6 @@ export default function Navbar({
     setLang(lang === 'EN' ? 'AR' : 'EN');
   };
 
-  // Mock quick links or suggestions for Search Autocomplete
   const defaultSearchSuggestions = [
     { value: lang === 'EN' ? 'Copper Cuff' : 'سوار نحاسي' },
     { value: lang === 'EN' ? 'Turquoise Ring' : 'خاتم فيروز' },
@@ -80,7 +77,6 @@ export default function Navbar({
     if (!value) {
       setSearchOptions([]);
     } else {
-      // Filter suggestions
       const filtered = defaultSearchSuggestions.filter(item => 
         item.value.toLowerCase().includes(value.toLowerCase())
       );
@@ -94,9 +90,7 @@ export default function Navbar({
     setSelectedCollection('All');
     setCurrentTab('Shop');
     setSearchOpen(false);
-    // Preserving the query context in local storage so Shop page filters immediately
     localStorage.setItem('lazuli_search_query', value);
-    // Dispatch a custom event to notify Shop page to refresh search input immediately!
     window.dispatchEvent(new Event('search_query_updated'));
   };
 
@@ -109,104 +103,202 @@ export default function Navbar({
     window.dispatchEvent(new Event('search_query_updated'));
   };
 
-  // Antd Menu Dropdowns for dynamic Header navigation
   const profileMenu = (
-    <Menu className="custom-dropdown-menu p-3 shadow-xl border border-[#EAE3D9] bg-white min-w-[200px]">
-      <div className="px-3 py-2 border-b border-[#EAE3D9] mb-2">
+    <Menu className="p-3 shadow-xl border border-[#EAE3D9] bg-white min-w-[200px] !rounded-none font-sans">
+      <div className="px-3 py-2 border-b border-[#EAE3D9] mb-2 font-sans">
         <p className="font-semibold text-sm text-[#1C1A17]">{t('welcome')}, {user?.name || (lang === 'EN' ? 'Client' : 'عميلنا')}</p>
         <p className="text-xs text-gray-500 truncate">{user?.email}</p>
       </div>
-      <Menu.Item key="orders" onClick={() => setCurrentTab('Orders')}>
-        <span className="text-[#1C1A17] text-sm font-medium hover:text-[#C4A478]">{t('orders')}</span>
+      <Menu.Item key="orders" onClick={() => setCurrentTab('Orders')} className="hover:!bg-[#FAF9F6] !rounded-none">
+        <span className="text-[#1C1A17] text-sm font-medium hover:text-[#C4A478] font-sans">{t('orders')}</span>
       </Menu.Item>
-      <Menu.Item key="admin" onClick={() => setCurrentTab('Admin')}>
-        <div className="flex items-center gap-2 text-[#1C1A17] text-sm font-medium hover:text-[#C4A478]">
+      <Menu.Item key="admin" onClick={() => setCurrentTab('Admin')} className="hover:!bg-[#FAF9F6] !rounded-none">
+        <div className="flex items-center gap-2 text-[#1C1A17] text-sm font-medium hover:text-[#C4A478] font-sans">
           <Settings size={14} />
           <span>{t('adminPanel')}</span>
         </div>
       </Menu.Item>
       <Menu.Divider />
-      <Menu.Item key="logout" onClick={handleLogout} className="hover:bg-[#FFF5F5]">
-        <span className="text-red-500 text-sm font-semibold">{t('signOut')}</span>
+      <Menu.Item key="logout" onClick={handleLogout} className="hover:bg-[#FFF5F5] !rounded-none">
+        <span className="text-red-500 text-sm font-semibold font-sans">{t('signOut')}</span>
       </Menu.Item>
     </Menu>
   );
 
   return (
     <>
-      <nav className={`navbar ${isScrolled || currentTab !== 'Home' ? 'navbar-solid' : 'navbar-transparent'}`}>
-        <div className="navbar-container">
+      <nav 
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 h-20 ${
+          isScrolled || currentTab !== 'Home' 
+            ? 'bg-[#FAF9F6]/95 backdrop-blur-md border-b border-[#EAE3D9] text-[#1C1A17] shadow-sm' 
+            : 'bg-transparent border-b border-white/10 text-[#FAF8F5]'
+        }`}
+      >
+        <div className="max-w-7xl h-full mx-auto flex items-center justify-between px-6 md:px-8">
           
           {/* Left: Hamburger menu for mobile */}
-          <button className="mobile-toggle block lg:hidden" onClick={() => setMobileMenuOpen(true)}>
+          <button 
+            className="bg-transparent border-none text-current cursor-pointer block lg:hidden" 
+            onClick={() => setMobileMenuOpen(true)}
+          >
             <MenuIcon size={24} />
           </button>
 
           {/* Left/Middle: Nav items for desktop */}
-          <div className="nav-links-desktop hidden lg:flex">
+          <div className="hidden lg:flex items-center gap-8 font-sans font-medium text-xs uppercase tracking-widest h-full">
             <button 
-              className={currentTab === 'Home' ? 'active' : ''} 
+              className={`bg-transparent border-none text-current cursor-pointer py-2 relative transition-colors hover:text-[#C4A478] ${
+                currentTab === 'Home' ? 'border-b-2 border-[#C4A478] text-[#C4A478]' : ''
+              }`}
               onClick={() => { setCurrentTab('Home'); setSelectedCategory('All'); setSelectedCollection('All'); }}
             >
               {t('home')}
             </button>
             
             {/* Mega Category Trigger */}
-            <div className="mega-menu-trigger group py-5">
-              <button className={`flex items-center gap-1 ${currentTab === 'Shop' ? 'active' : ''}`} onClick={() => handleCategoryClick('All')}>
+            <div className="mega-menu-trigger group py-6 h-full flex items-center relative">
+              <button 
+                className={`flex items-center gap-1 bg-transparent border-none text-current cursor-pointer transition-colors hover:text-[#C4A478] ${
+                  currentTab === 'Shop' ? 'text-[#C4A478]' : ''
+                }`} 
+                onClick={() => handleCategoryClick('All')}
+              >
                 <span>{t('shop')}</span>
               </button>
               {/* MEGA MENU CONTAINER */}
-              <div className="mega-menu-container opacity-0 invisible group-hover:opacity-100 group-hover:visible">
-                <div className="mega-menu-content grid grid-cols-4 gap-8">
+              <div className="opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 absolute top-full left-1/2 -translate-x-1/2 w-[90vw] max-w-4xl bg-white border border-[#EAE3D9] shadow-xl p-8 z-50 grid grid-cols-4 gap-8">
+                <div>
+                  <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-4 pb-2 border-b border-[#FAF9F6]">
+                    {lang === 'EN' ? 'Store Categories' : 'فئات المتجر'}
+                  </h4>
+                  <ul className="flex flex-col gap-2.5">
+                    <li>
+                      <button 
+                        onClick={() => handleCategoryClick('Handmade Copper')}
+                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                      >
+                        {lang === 'EN' ? 'Handmade Copper' : 'النحاس الهاند ميد'}
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        onClick={() => handleCategoryClick('Precious Stones')}
+                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                      >
+                        {lang === 'EN' ? 'Precious Stones' : 'الأحجار الكريمة الهاند ميد'}
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        onClick={() => handleCategoryClick('Gift Boxes & Bundles')}
+                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                      >
+                        {lang === 'EN' ? 'Gift Boxes & Bundles' : 'الهدايا والبوكسات'}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-4 pb-2 border-b border-[#FAF9F6]">
+                    {lang === 'EN' ? 'Subcategories' : 'أقسام فرعية'}
+                  </h4>
+                  <ul className="flex flex-col gap-2.5">
+                    <li>
+                      <button 
+                        onClick={() => { setSelectedCategory('All'); setSelectedCollection('All'); setCurrentTab('Shop'); }}
+                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                      >
+                        {t('all')}
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        onClick={() => handleCategoryClick('Handmade Copper')}
+                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                      >
+                        {lang === 'EN' ? 'Copper Cuff' : 'أساور نحاس'}
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        onClick={() => handleCategoryClick('Precious Stones')}
+                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                      >
+                        {lang === 'EN' ? 'Stone Rings' : 'خواتم مرصعة بالجرام'}
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        onClick={() => handleCategoryClick('Gift Boxes & Bundles')}
+                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                      >
+                        {lang === 'EN' ? 'Premium Bundles' : 'بوكسات هدايا'}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-4 pb-2 border-b border-[#FAF9F6]">
+                    {t('collections')}
+                  </h4>
+                  <ul className="flex flex-col gap-2.5">
+                    <li>
+                      <button 
+                        onClick={() => handleCollectionClick("Nature's Mosaic")}
+                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                      >
+                        {lang === 'EN' ? "Nature's Mosaic" : "فسيفساء الطبيعة"}
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        onClick={() => handleCollectionClick("El Kawthar")}
+                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                      >
+                        {lang === 'EN' ? "El Kawthar" : "الكوثر"}
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        onClick={() => handleCollectionClick("Oumy")}
+                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                      >
+                        {lang === 'EN' ? "Oumy" : "أمي"}
+                      </button>
+                    </li>
+                    <li>
+                      <button 
+                        onClick={() => handleCollectionClick("Calligraphy")}
+                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                      >
+                        {lang === 'EN' ? "Calligraphy" : "الخط العربي"}
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+                <div className="flex flex-col justify-between border-l border-[#EAE3D9] pl-6 rtl:border-l-0 rtl:border-r rtl:pr-6 rtl:pl-0">
                   <div>
-                    <h4 className="mega-menu-column-title">{lang === 'EN' ? 'Store Categories' : 'فئات المتجر'}</h4>
-                    <ul className="mega-menu-list">
-                      <li><button onClick={() => handleCategoryClick('Handmade Copper')}>{lang === 'EN' ? 'Handmade Copper' : 'النحاس الهاند ميد'}</button></li>
-                      <li><button onClick={() => handleCategoryClick('Precious Stones')}>{lang === 'EN' ? 'Precious Stones' : 'الأحجار الكريمة الهاند ميد'}</button></li>
-                      <li><button onClick={() => handleCategoryClick('Gift Boxes & Bundles')}>{lang === 'EN' ? 'Gift Boxes & Bundles' : 'الهدايا والبوكسات'}</button></li>
-                    </ul>
+                    <h4 className="font-serif text-sm font-bold tracking-widest text-[#C4A478]">LAZULI</h4>
+                    <p className="text-[11px] text-gray-500 leading-relaxed mt-2 font-sans font-normal">
+                      {lang === 'EN' 
+                        ? 'A celebration of Egyptian heritage and traditional slow craftsmanship. Pure handmade copper meeting divine celestial semi-precious gemstones.' 
+                        : 'احتفاء بالتراث المصري وصياغة المعادن البطيئة. نحاس نقي مصنوع باليد يلتقي بأحجار كريمة طبيعية ساحرة.'}
+                    </p>
                   </div>
-                  <div>
-                    <h4 className="mega-menu-column-title">{lang === 'EN' ? 'Subcategories' : 'أقسام فرعية'}</h4>
-                    <ul className="mega-menu-list">
-                      <li><button onClick={() => { setSelectedCategory('All'); setSelectedCollection('All'); setCurrentTab('Shop'); }}>{t('all')}</button></li>
-                      <li><button onClick={() => handleCategoryClick('Handmade Copper')}>{lang === 'EN' ? 'Copper Cuff' : 'أساور نحاس'}</button></li>
-                      <li><button onClick={() => handleCategoryClick('Precious Stones')}>{lang === 'EN' ? 'Stone Rings' : 'خواتم مرصعة بالجرام'}</button></li>
-                      <li><button onClick={() => handleCategoryClick('Gift Boxes & Bundles')}>{lang === 'EN' ? 'Premium Bundles' : 'بوكسات هدايا'}</button></li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="mega-menu-column-title">{t('collections')}</h4>
-                    <ul className="mega-menu-list">
-                      <li><button onClick={() => handleCollectionClick("Nature's Mosaic")}>{lang === 'EN' ? "Nature's Mosaic" : "فسيفساء الطبيعة"}</button></li>
-                      <li><button onClick={() => handleCollectionClick("El Kawthar")}>{lang === 'EN' ? "El Kawthar" : "الكوثر"}</button></li>
-                      <li><button onClick={() => handleCollectionClick("Oumy")}>{lang === 'EN' ? "Oumy" : "أمي"}</button></li>
-                      <li><button onClick={() => handleCollectionClick("Calligraphy")}>{lang === 'EN' ? "Calligraphy" : "الخط العربي"}</button></li>
-                    </ul>
-                  </div>
-                  <div className="mega-menu-brand-card flex flex-col justify-between border-l border-[#EAE3D9] pl-6 rtl:border-l-0 rtl:border-r rtl:pr-6 rtl:pl-0">
-                    <div>
-                      <h4 className="mega-menu-column-title text-brand-gold tracking-widest">LAZULI</h4>
-                      <p className="text-xs text-gray-500 leading-relaxed mt-2">
-                        {lang === 'EN' 
-                          ? 'A celebration of Egyptian heritage and traditional slow craftsmanship. Pure handmade copper meeting divine celestial semi-precious gemstones.' 
-                          : 'احتفاء بالتراث المصري وصياغة المعادن البطيئة. نحاس نقي مصنوع باليد يلتقي بأحجار كريمة طبيعية ساحرة.'}
-                      </p>
-                    </div>
-                    <button 
-                      onClick={() => { setCurrentTab('Shop'); setSelectedCategory('All'); }}
-                      className="text-xs font-semibold uppercase tracking-widest text-[#1C1A17] hover:text-brand-gold text-left rtl:text-right mt-4 flex items-center gap-1"
-                    >
-                      <span>{lang === 'EN' ? 'Explore Catalog' : 'استكشف المعرض'} →</span>
-                    </button>
-                  </div>
+                  <button 
+                    onClick={() => { setCurrentTab('Shop'); setSelectedCategory('All'); }}
+                    className="bg-transparent border-none text-[10px] font-semibold uppercase tracking-widest text-[#1C1A17] hover:text-[#C4A478] text-left rtl:text-right mt-4 flex items-center gap-1 font-sans cursor-pointer"
+                  >
+                    <span>{lang === 'EN' ? 'Explore Catalog' : 'استكشف المعرض'} →</span>
+                  </button>
                 </div>
               </div>
             </div>
 
             <button 
-              className={currentTab === 'Orders' ? 'active' : ''} 
+              className={`bg-transparent border-none text-current cursor-pointer py-2 relative transition-colors hover:text-[#C4A478] ${
+                currentTab === 'Orders' ? 'border-b-2 border-[#C4A478] text-[#C4A478]' : ''
+              }`}
               onClick={() => { if (user) { setCurrentTab('Orders'); } else { setAuthOpen(true); } }}
             >
               {t('orders')}
@@ -214,50 +306,67 @@ export default function Navbar({
           </div>
 
           {/* Center: Brand Logo */}
-          <div className="nav-logo" onClick={() => { setCurrentTab('Home'); setSelectedCategory('All'); setSelectedCollection('All'); }}>
-            LAZULI
-            <span>COPPER & STONES</span>
+          <div 
+            className="flex flex-col items-center justify-center font-serif text-xl md:text-2xl font-bold tracking-[0.15em] cursor-pointer leading-none text-center" 
+            onClick={() => { setCurrentTab('Home'); setSelectedCategory('All'); setSelectedCollection('All'); }}
+          >
+            <span className="text-current tracking-[0.2em] font-serif">LAZULI</span>
+            <span className="block font-sans text-[8px] tracking-[0.35em] mt-1 text-[#C4A478] font-bold uppercase">
+              COPPER & STONES
+            </span>
           </div>
 
           {/* Right: Actions */}
-          <div className="nav-actions flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             
             {/* Bilingual Toggle Button! */}
-            <button className="lang-toggle-btn hidden sm:inline-flex" onClick={toggleLanguage}>
+            <button 
+              className="hidden sm:inline-flex items-center gap-1.5 bg-transparent border border-current/30 px-3 py-1 text-[11px] font-semibold tracking-wider uppercase cursor-pointer hover:text-[#C4A478] hover:border-[#C4A478] transition-all font-sans" 
+              onClick={toggleLanguage}
+            >
               <span>🌐 {lang === 'EN' ? 'العربية' : 'English'}</span>
             </button>
 
             {/* Search Trigger */}
-            <button className="nav-action-btn" onClick={() => setSearchOpen(true)}>
+            <button 
+              className="bg-transparent border-none text-current cursor-pointer relative p-1 transition-colors hover:text-[#C4A478] inline-flex items-center justify-center" 
+              onClick={() => setSearchOpen(true)}
+            >
               <Search size={20} />
             </button>
 
             {/* Wishlist Icon */}
             <button 
-              className="nav-action-btn badge-btn hidden sm:inline-flex" 
+              className="bg-transparent border-none text-current cursor-pointer relative p-1 transition-colors hover:text-[#C4A478] inline-flex items-center justify-center hidden sm:inline-flex" 
               onClick={() => { setSelectedCategory('All'); setSelectedCollection('All'); setCurrentTab('Shop'); }}
             >
               <Badge count={favorites.length} size="small" offset={[2, -4]} color="#C4A478">
-                <Heart size={20} className={favorites.length > 0 ? 'heart-filled' : ''} />
+                <Heart size={20} className={favorites.length > 0 ? 'fill-[#E06A6A] text-[#E06A6A]' : ''} />
               </Badge>
             </button>
 
             {/* User Profile Menu */}
             {user ? (
               <Dropdown overlay={profileMenu} trigger={['click']} placement="bottomRight">
-                <button className="nav-action-btn hidden sm:inline-block relative">
+                <button className="bg-transparent border-none text-current cursor-pointer relative p-1 transition-colors hover:text-[#C4A478] inline-flex items-center justify-center">
                   <User size={20} />
-                  <span className="user-dot bg-brand-gold"></span>
+                  <span className="absolute bottom-1 right-1 w-1.5 h-1.5 bg-[#C4A478] rounded-full"></span>
                 </button>
               </Dropdown>
             ) : (
-              <button className="nav-action-btn hidden sm:inline-block" onClick={() => setAuthOpen(true)}>
+              <button 
+                className="bg-transparent border-none text-current cursor-pointer relative p-1 transition-colors hover:text-[#C4A478] inline-flex items-center justify-center" 
+                onClick={() => setAuthOpen(true)}
+              >
                 <User size={20} />
               </button>
             )}
 
             {/* Shopping Bag Trigger */}
-            <button className="nav-action-btn badge-btn" onClick={() => setCartOpen(true)}>
+            <button 
+              className="bg-transparent border-none text-current cursor-pointer relative p-1 transition-colors hover:text-[#C4A478] inline-flex items-center justify-center" 
+              onClick={() => setCartOpen(true)}
+            >
               <Badge count={totalCartCount} size="small" offset={[4, -4]} color="#D37F4B">
                 <ShoppingBag size={20} />
               </Badge>
@@ -268,73 +377,149 @@ export default function Navbar({
 
       {/* MOBILE NAV DRAWER OVERLAY */}
       {mobileMenuOpen && (
-        <div className="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}>
-          <div className="mobile-menu-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="mobile-menu-header">
-              <div className="nav-logo">
-                LAULI
-                <span>COPPER & STONES</span>
+        <div 
+          className="fixed inset-0 w-full h-full bg-black/40 backdrop-blur-sm z-[200] flex animate-fade-in"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div 
+            className={`w-[85%] max-w-[320px] h-full bg-white shadow-2xl p-6 flex flex-col transition-all duration-300 ${
+              lang === 'AR' ? 'mr-auto ml-0' : 'ml-0 mr-auto'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex flex-col font-serif text-lg font-bold tracking-widest leading-none">
+                <span>LAZULI</span>
+                <span className="block font-sans text-[7px] tracking-[0.3em] mt-1 text-[#C4A478] font-bold uppercase">
+                  COPPER & STONES
+                </span>
               </div>
-              <button className="close-btn" onClick={() => setMobileMenuOpen(false)}>
+              <button 
+                className="bg-transparent border-none text-[#1C1A17] cursor-pointer" 
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 <X size={24} />
               </button>
             </div>
 
             {/* Mobile Auth Header */}
-            <div className="mobile-menu-auth-block">
+            <div className="pb-6 border-b border-[#EAE3D9] mb-6">
               {user ? (
-                <div className="mobile-auth-logged">
-                  <div className="avatar-circle">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#C4A478]/15 text-[#C4A478] flex items-center justify-center font-bold font-sans">
                     {user.name ? user.name[0].toUpperCase() : 'U'}
                   </div>
                   <div>
-                    <p className="user-name">{t('welcome')}, {user.name || (lang === 'EN' ? 'Artisan' : 'صائغنا')}</p>
-                    <button className="mobile-logout-btn" onClick={handleLogout}>{t('signOut')}</button>
+                    <p className="font-sans text-xs font-semibold text-[#1C1A17]">{t('welcome')}, {user.name || (lang === 'EN' ? 'Artisan' : 'صائغنا')}</p>
+                    <button 
+                      className="bg-transparent border-none text-red-500 text-[10px] font-bold cursor-pointer underline p-0 mt-1" 
+                      onClick={handleLogout}
+                    >
+                      {t('signOut')}
+                    </button>
                   </div>
                 </div>
               ) : (
-                <button className="btn-gold mobile-auth-trigger" onClick={() => { setAuthOpen(true); setMobileMenuOpen(false); }}>
-                  <span>{lang === 'EN' ? 'Sign In / Register' : 'تسجيل الدخول / التسجيل'}</span>
+                <button 
+                  className="w-full h-11 bg-[#1C1A17] hover:bg-[#C4A478] text-white font-sans text-xs font-semibold uppercase tracking-widest border-none cursor-pointer transition-colors" 
+                  onClick={() => { setAuthOpen(true); setMobileMenuOpen(false); }}
+                >
+                  {lang === 'EN' ? 'Sign In / Register' : 'تسجيل الدخول / التسجيل'}
                 </button>
               )}
             </div>
             
-            <div className="mobile-menu-links">
-              <button onClick={() => { setCurrentTab('Home'); setMobileMenuOpen(false); }}>{t('home')}</button>
+            <div className="flex flex-col gap-6 overflow-y-auto flex-grow pr-2">
+              <button 
+                onClick={() => { setCurrentTab('Home'); setMobileMenuOpen(false); }}
+                className="bg-transparent border-none text-left rtl:text-right font-serif text-lg font-medium text-[#1C1A17] cursor-pointer"
+              >
+                {t('home')}
+              </button>
               
-              <div className="mobile-menu-section">
-                <p className="mobile-section-title">{t('shop')}</p>
-                <button onClick={() => handleCategoryClick('All')}>{t('all')}</button>
-                <button onClick={() => handleCategoryClick('Handmade Copper')}>{lang === 'EN' ? 'Handmade Copper (النحاس)' : 'النحاس الهاند ميد'}</button>
-                <button onClick={() => handleCategoryClick('Precious Stones')}>{lang === 'EN' ? 'Precious Stones (الأحجار)' : 'الأحجار الكريمة الهاند ميد'}</button>
-                <button onClick={() => handleCategoryClick('Gift Boxes & Bundles')}>{lang === 'EN' ? 'Gift Boxes (الهدايا)' : 'الهدايا والبوكسات'}</button>
+              <div className="flex flex-col gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#C4A478] font-sans">{t('shop')}</p>
+                <button 
+                  onClick={() => handleCategoryClick('All')}
+                  className="bg-transparent border-none text-left rtl:text-right text-sm py-1 text-[#706C66] cursor-pointer font-sans"
+                >
+                  {t('all')}
+                </button>
+                <button 
+                  onClick={() => handleCategoryClick('Handmade Copper')}
+                  className="bg-transparent border-none text-left rtl:text-right text-sm py-1 text-[#706C66] cursor-pointer font-sans"
+                >
+                  {lang === 'EN' ? 'Handmade Copper' : 'النحاس الهاند ميد'}
+                </button>
+                <button 
+                  onClick={() => handleCategoryClick('Precious Stones')}
+                  className="bg-transparent border-none text-left rtl:text-right text-sm py-1 text-[#706C66] cursor-pointer font-sans"
+                >
+                  {lang === 'EN' ? 'Precious Stones' : 'الأحجار الكريمة الهاند ميد'}
+                </button>
+                <button 
+                  onClick={() => handleCategoryClick('Gift Boxes & Bundles')}
+                  className="bg-transparent border-none text-left rtl:text-right text-sm py-1 text-[#706C66] cursor-pointer font-sans"
+                >
+                  {lang === 'EN' ? 'Gift Boxes' : 'الهدايا والبوكسات'}
+                </button>
               </div>
 
-              <div className="mobile-menu-section">
-                <p className="mobile-section-title">{t('collections')}</p>
-                <button onClick={() => handleCollectionClick("Nature's Mosaic")}>{lang === 'EN' ? "Nature's Mosaic" : "فسيفساء الطبيعة"}</button>
-                <button onClick={() => handleCollectionClick("El Kawthar")}>{lang === 'EN' ? "El Kawthar" : "الكوثر"}</button>
-                <button onClick={() => handleCollectionClick("Oumy")}>{lang === 'EN' ? "Oumy" : "أمي"}</button>
-                <button onClick={() => handleCollectionClick("Calligraphy")}>{lang === 'EN' ? "Calligraphy" : "الخط العربي"}</button>
+              <div className="flex flex-col gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#C4A478] font-sans">{t('collections')}</p>
+                <button 
+                  onClick={() => handleCollectionClick("Nature's Mosaic")}
+                  className="bg-transparent border-none text-left rtl:text-right text-sm py-1 text-[#706C66] cursor-pointer font-sans"
+                >
+                  {lang === 'EN' ? "Nature's Mosaic" : "فسيفساء الطبيعة"}
+                </button>
+                <button 
+                  onClick={() => handleCollectionClick("El Kawthar")}
+                  className="bg-transparent border-none text-left rtl:text-right text-sm py-1 text-[#706C66] cursor-pointer font-sans"
+                >
+                  {lang === 'EN' ? "El Kawthar" : "الكوثر"}
+                </button>
+                <button 
+                  onClick={() => handleCollectionClick("Oumy")}
+                  className="bg-transparent border-none text-left rtl:text-right text-sm py-1 text-[#706C66] cursor-pointer font-sans"
+                >
+                  {lang === 'EN' ? "Oumy" : "أمي"}
+                </button>
+                <button 
+                  onClick={() => handleCollectionClick("Calligraphy")}
+                  className="bg-transparent border-none text-left rtl:text-right text-sm py-1 text-[#706C66] cursor-pointer font-sans"
+                >
+                  {lang === 'EN' ? "Calligraphy" : "الخط العربي"}
+                </button>
               </div>
 
-              {/* Mobile-only secondary quick actions */}
-              <div className="mobile-menu-section mobile-secondary-section">
-                <p className="mobile-section-title">{lang === 'EN' ? 'Account & Wishlist' : 'الحساب والمفضلة'}</p>
+              <div className="flex flex-col gap-2 border-t border-[#EAE3D9] pt-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#C4A478] font-sans">
+                  {lang === 'EN' ? 'Account & Wishlist' : 'الحساب والمفضلة'}
+                </p>
                 
-                <button className="mobile-fav-link" onClick={() => { setSelectedCategory('All'); setSelectedCollection('All'); setCurrentTab('Shop'); setMobileMenuOpen(false); }}>
-                  <Heart size={16} className={`${favorites.length > 0 ? 'heart-filled' : ''} mr-2 ml-2`} />
+                <button 
+                  className="bg-transparent border-none text-left rtl:text-right text-sm py-1 text-[#706C66] cursor-pointer font-sans flex items-center gap-2"
+                  onClick={() => { setSelectedCategory('All'); setSelectedCollection('All'); setCurrentTab('Shop'); setMobileMenuOpen(false); }}
+                >
+                  <Heart size={14} className={favorites.length > 0 ? 'fill-[#E06A6A] text-[#E06A6A]' : ''} />
                   <span>{t('favorites')} ({favorites.length})</span>
                 </button>
 
                 {user && (
-                  <button className="mobile-orders-link" onClick={() => { setCurrentTab('Orders'); setMobileMenuOpen(false); }}>
+                  <button 
+                    className="bg-transparent border-none text-left rtl:text-right text-sm py-1 text-[#706C66] cursor-pointer font-sans"
+                    onClick={() => { setCurrentTab('Orders'); setMobileMenuOpen(false); }}
+                  >
                     <span>{t('orders')}</span>
                   </button>
                 )}
 
                 {user && (
-                  <button className="mobile-admin-link" onClick={() => { setCurrentTab('Admin'); setMobileMenuOpen(false); }}>
+                  <button 
+                    className="bg-transparent border-none text-left rtl:text-right text-sm py-1 text-[#706C66] cursor-pointer font-sans"
+                    onClick={() => { setCurrentTab('Admin'); setMobileMenuOpen(false); }}
+                  >
                     <span>{t('adminPanel')}</span>
                   </button>
                 )}
@@ -342,9 +527,12 @@ export default function Navbar({
             </div>
 
             {/* Mobile Language Switcher at the bottom */}
-            <div className="mobile-menu-footer-lang">
-              <button className="mobile-lang-btn" onClick={() => { toggleLanguage(); setMobileMenuOpen(false); }}>
-                <span>🌐 {lang === 'EN' ? 'العربية (Arabic)' : 'English (إنجليزية)'}</span>
+            <div className="mt-auto pt-6 border-t border-[#EAE3D9]">
+              <button 
+                className="w-full h-11 bg-[#FAF9F6] border border-[#EAE3D9] font-sans text-xs font-semibold cursor-pointer hover:text-[#C4A478] hover:border-[#C4A478] transition-colors flex items-center justify-center gap-1.5"
+                onClick={() => { toggleLanguage(); setMobileMenuOpen(false); }}
+              >
+                <span>🌐 {lang === 'EN' ? 'العربية (Arabic)' : 'English (الإنجليزية)'}</span>
               </button>
             </div>
           </div>
@@ -353,14 +541,17 @@ export default function Navbar({
 
       {/* SEARCH FULLSCREEN BLUR OVERLAY WITH ANT AUTOCOMPLETE */}
       {searchOpen && (
-        <div className="search-overlay">
-          <button className="search-close-btn" onClick={() => setSearchOpen(false)}>
+        <div className="fixed inset-0 w-full h-full bg-[#1C1A17]/95 backdrop-blur-md z-[1000] flex items-center justify-center animate-fade-in">
+          <button 
+            className="absolute top-8 right-8 bg-transparent border-none text-white cursor-pointer hover:text-[#C4A478] hover:rotate-90 transition-all" 
+            onClick={() => setSearchOpen(false)}
+          >
             <X size={30} />
           </button>
-          <div className="search-container max-w-2xl px-6 w-full text-center">
-            <h2 className="search-title mb-6">{t('searchTitle')}</h2>
-            <div className="search-bar flex items-center border border-[#C4A478] bg-white px-4 py-2 w-full shadow-lg">
-              <Search className="search-bar-icon text-brand-gold mr-3 ml-3" size={24} />
+          <div className="max-w-2xl px-6 w-full text-center">
+            <h2 className="font-serif text-3xl md:text-4xl text-white tracking-wide mb-6">{t('searchTitle')}</h2>
+            <div className="flex items-center border border-[#C4A478] bg-white px-4 py-2 w-full shadow-2xl">
+              <Search className="text-[#C4A478] mr-3 ml-3" size={24} />
               
               <AutoComplete
                 className="w-full text-left rtl:text-right"
@@ -377,500 +568,15 @@ export default function Navbar({
               >
                 <input 
                   type="text" 
-                  className="w-full text-lg border-none outline-none focus:ring-0 text-[#1C1A17]"
-                  style={{ background: 'transparent' }}
+                  className="w-full text-lg border-none outline-none focus:ring-0 text-[#1C1A17] bg-transparent"
                   autoFocus
                 />
               </AutoComplete>
             </div>
-            <p className="search-hint mt-3 text-xs text-[#FAF8F5] uppercase tracking-widest">{t('searchEnter')}</p>
+            <p className="mt-4 text-[10px] text-gray-400 uppercase tracking-[0.2em]">{t('searchEnter')}</p>
           </div>
         </div>
       )}
-
-      <style>{`
-        .navbar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          z-index: 100;
-          transition: var(--transition-smooth);
-          height: 80px;
-        }
-        
-        .navbar-transparent {
-          background: transparent;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          color: var(--text-light);
-        }
-        
-        .navbar-solid {
-          background: rgba(253, 251, 250, 0.95);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border-bottom: 1px solid var(--border-color);
-          color: var(--text-primary);
-          box-shadow: var(--shadow-sm);
-        }
-
-        .navbar-transparent .nav-logo {
-          color: #FFFDFB;
-        }
-
-        .navbar-container {
-          max-width: 1400px;
-          height: 100%;
-          margin: 0 auto;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 2rem;
-        }
-
-        .mobile-toggle {
-          background: transparent;
-          border: none;
-          color: inherit;
-          cursor: pointer;
-          display: none;
-        }
-
-        @media (max-width: 1024px) {
-          .mobile-toggle {
-            display: block;
-          }
-        }
-
-        .nav-links-desktop {
-          display: flex;
-          align-items: center;
-          gap: 2.5rem;
-          font-weight: 500;
-          font-size: 0.85rem;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-        }
-
-        .nav-links-desktop button, .nav-dropdown-trigger span {
-          background: transparent;
-          border: none;
-          color: inherit;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          font-weight: 500;
-          font-size: 0.85rem;
-          cursor: pointer;
-          padding: 0.5rem 0;
-          position: relative;
-          transition: var(--transition-snappy);
-        }
-
-        .nav-links-desktop button::after, .nav-dropdown-trigger span::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 0;
-          height: 1.5px;
-          background: var(--gold-primary);
-          transition: var(--transition-smooth);
-        }
-
-        .nav-links-desktop button:hover::after, 
-        .nav-links-desktop button.active::after {
-          width: 100%;
-        }
-
-        .nav-logo {
-          font-family: 'Playfair Display', serif;
-          font-size: 1.8rem;
-          font-weight: 700;
-          letter-spacing: 0.15em;
-          cursor: pointer;
-          text-align: center;
-          line-height: 1;
-        }
-
-        .nav-logo span {
-          display: block;
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.55rem;
-          letter-spacing: 0.35em;
-          margin-top: 0.2rem;
-          color: var(--gold-primary);
-          font-weight: 600;
-        }
-
-        .nav-actions {
-          display: flex;
-          align-items: center;
-          gap: 1.5rem;
-        }
-
-        .lang-toggle-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.4rem;
-          background: transparent;
-          border: 1px solid var(--border-color);
-          padding: 0.35rem 0.75rem;
-          font-size: 0.75rem;
-          font-weight: 600;
-          cursor: pointer;
-          color: inherit;
-          transition: var(--transition-snappy);
-        }
-
-        .navbar-transparent .lang-toggle-btn {
-          border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .lang-toggle-btn:hover {
-          border-color: var(--gold-primary);
-          color: var(--gold-primary);
-        }
-
-        .nav-action-btn {
-          background: transparent;
-          border: none;
-          color: inherit;
-          cursor: pointer;
-          position: relative;
-          padding: 0.25rem;
-          transition: var(--transition-snappy);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .nav-action-btn:hover {
-          color: var(--gold-primary);
-        }
-
-        .heart-filled {
-          fill: #E06A6A;
-          color: #E06A6A !important;
-        }
-
-        .badge-btn {
-          display: inline-flex;
-          position: relative;
-        }
-
-        .user-dot {
-          position: absolute;
-          bottom: 2px;
-          right: 2px;
-          width: 6px;
-          height: 6px;
-          background: var(--gold-primary);
-          border-radius: 50%;
-        }
-
-        /* MOBILE MENU PANELS */
-        .mobile-menu-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.4);
-          backdrop-filter: blur(8px);
-          z-index: 200;
-          animation: fade-in 0.3s ease-out;
-        }
-
-        .mobile-menu-panel {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 85%;
-          max-width: 320px;
-          height: 100%;
-          background: var(--bg-secondary);
-          box-shadow: var(--shadow-lg);
-          padding: 2rem;
-          display: flex;
-          flex-direction: column;
-          animation: slide-in-left 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .rtl-active .mobile-menu-panel {
-          left: auto;
-          right: 0;
-          animation: slide-in-right-mobile 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .mobile-menu-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 1.5rem;
-          flex-shrink: 0;
-        }
-
-        .mobile-menu-header .close-btn {
-          background: transparent;
-          border: none;
-          color: var(--text-primary);
-          cursor: pointer;
-        }
-
-        .mobile-menu-auth-block {
-          padding-bottom: 1.5rem;
-          border-bottom: 1px solid var(--border-color);
-          margin-bottom: 1.5rem;
-          flex-shrink: 0;
-        }
-
-        .mobile-auth-logged {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .avatar-circle {
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          background: rgba(196, 164, 120, 0.15);
-          color: var(--gold-primary);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 700;
-          font-size: 1.1rem;
-          border: 1px solid var(--gold-light);
-        }
-
-        .mobile-logout-btn {
-          background: transparent;
-          border: none;
-          color: #D9534F;
-          font-size: 0.75rem;
-          font-weight: 600;
-          cursor: pointer;
-          padding: 0;
-          text-decoration: underline;
-          margin-top: 0.15rem;
-          text-align: inherit;
-        }
-
-        .mobile-auth-trigger {
-          width: 100%;
-          height: 44px;
-        }
-
-        .mobile-menu-links {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-          overflow-y: auto;
-          flex-grow: 1;
-          padding-right: 0.5rem;
-        }
-
-        .mobile-menu-links > button {
-          background: transparent;
-          border: none;
-          text-align: inherit;
-          font-family: 'Playfair Display', serif;
-          font-size: 1.4rem;
-          font-weight: 500;
-          color: var(--text-primary);
-          cursor: pointer;
-        }
-
-        .mobile-menu-section {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .mobile-section-title {
-          font-size: 0.75rem;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--gold-primary);
-          font-weight: 700;
-          margin-bottom: 0.25rem;
-        }
-
-        .mobile-menu-section button {
-          background: transparent;
-          border: none;
-          text-align: inherit;
-          font-size: 0.95rem;
-          padding: 0.4rem 0;
-          color: var(--text-secondary);
-          cursor: pointer;
-          font-family: inherit;
-          display: flex;
-          align-items: center;
-        }
-
-        .mobile-menu-section button:hover {
-          color: var(--gold-primary);
-        }
-
-        .mobile-secondary-section {
-          margin-top: 0.5rem;
-          padding-top: 1.5rem;
-          border-top: 1px dashed var(--border-color);
-        }
-
-        .mobile-menu-footer-lang {
-          margin-top: auto;
-          padding-top: 1.5rem;
-          border-top: 1px solid var(--border-color);
-          flex-shrink: 0;
-        }
-
-        .mobile-lang-btn {
-          width: 100%;
-          height: 44px;
-          background: var(--bg-primary);
-          border: 1px solid var(--border-color);
-          font-weight: 600;
-          font-size: 0.85rem;
-          cursor: pointer;
-          color: var(--text-primary);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: var(--transition-snappy);
-        }
-
-        .mobile-lang-btn:hover {
-          border-color: var(--gold-primary);
-          color: var(--gold-primary);
-        }
-
-        /* Mega Menu Styles */
-        .mega-menu-trigger {
-          position: relative;
-        }
-
-        .mega-menu-container {
-          position: fixed;
-          top: 80px;
-          left: 0;
-          width: 100vw;
-          background: #FFFFFF;
-          border-bottom: 1px solid #EAE3D9;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-          padding: 2.5rem 10%;
-          z-index: 99;
-          transition: var(--transition-smooth);
-          transform: translateY(10px);
-        }
-
-        .mega-menu-content {
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-
-        .mega-menu-column-title {
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.75rem;
-          text-transform: uppercase;
-          letter-spacing: 0.15em;
-          color: var(--text-primary);
-          font-weight: 700;
-          margin-bottom: 1.2rem;
-          border-bottom: 1px solid #FAF9F6;
-          padding-bottom: 0.5rem;
-        }
-
-        .mega-menu-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-
-        .mega-menu-list button {
-          background: transparent;
-          border: none;
-          color: var(--text-secondary);
-          font-size: 0.85rem;
-          font-weight: 400;
-          cursor: pointer;
-          transition: var(--transition-snappy);
-          padding: 0;
-          text-align: left;
-        }
-
-        .rtl-active .mega-menu-list button {
-          text-align: right;
-        }
-
-        .mega-menu-list button:hover {
-          color: var(--gold-primary);
-          transform: translateX(3px);
-        }
-
-        .rtl-active .mega-menu-list button:hover {
-          transform: translateX(-3px);
-        }
-
-        .search-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(28, 26, 23, 0.96);
-          backdrop-filter: blur(12px);
-          z-index: 1000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          animation: fade-in 0.3s ease-out;
-        }
-
-        .search-close-btn {
-          position: absolute;
-          top: 2rem;
-          right: 2rem;
-          background: transparent;
-          border: none;
-          color: var(--bg-primary);
-          cursor: pointer;
-          transition: var(--transition-snappy);
-        }
-
-        .rtl-active .search-close-btn {
-          right: auto;
-          left: 2rem;
-        }
-
-        .search-close-btn:hover {
-          color: var(--gold-primary);
-          transform: rotate(90deg);
-        }
-
-        .search-title {
-          font-family: 'Playfair Display', serif;
-          font-size: 2.2rem;
-          color: var(--bg-primary);
-          letter-spacing: 0.05em;
-        }
-
-        /* Antd AutoComplete input override */
-        .search-bar .ant-select-selector {
-          background: transparent !important;
-          border: none !important;
-          box-shadow: none !important;
-          padding: 0 !important;
-          height: 100% !important;
-        }
-
-        .search-bar .ant-select-selection-search-input {
-          height: 100% !important;
-          font-size: 1.25rem !important;
-        }
-      `}</style>
     </>
   );
 }
