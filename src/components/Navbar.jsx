@@ -125,199 +125,204 @@ export default function Navbar({
     </Menu>
   );
 
+  const isHome = currentTab === 'Home';
+
   return (
     <>
       <nav 
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 h-20 ${
-          isScrolled || currentTab !== 'Home' 
+        className={`${isHome ? 'fixed' : 'sticky'} top-0 left-0 w-full z-50 transition-all duration-300 h-20 ${
+          isScrolled || !isHome 
             ? 'bg-[#FAF9F6]/95 backdrop-blur-md border-b border-[#EAE3D9] text-[#1C1A17] shadow-sm' 
             : 'bg-transparent border-b border-white/10 text-[#FAF8F5]'
         }`}
       >
-        <div className="max-w-7xl h-full mx-auto flex items-center justify-between px-6 md:px-8">
+        <div className="max-w-[1400px] h-full mx-auto grid grid-cols-3 items-center px-6 md:px-8">
           
-          {/* Left: Hamburger menu for mobile */}
-          <button 
-            className="bg-transparent border-none text-current cursor-pointer block lg:hidden" 
-            onClick={() => setMobileMenuOpen(true)}
-          >
-            <MenuIcon size={24} />
-          </button>
-
-          {/* Left/Middle: Nav items for desktop */}
-          <div className="hidden lg:flex items-center gap-8 font-sans font-medium text-xs uppercase tracking-widest h-full">
+          {/* Column 1: Links (Desktop) or Hamburger (Mobile) */}
+          <div className="flex items-center justify-start h-full">
             <button 
-              className={`bg-transparent border-none text-current cursor-pointer py-2 relative transition-colors hover:text-[#C4A478] ${
-                currentTab === 'Home' ? 'border-b-2 border-[#C4A478] text-[#C4A478]' : ''
-              }`}
-              onClick={() => { setCurrentTab('Home'); setSelectedCategory('All'); setSelectedCollection('All'); }}
+              className="bg-transparent border-none text-current cursor-pointer block lg:hidden" 
+              onClick={() => setMobileMenuOpen(true)}
             >
-              {t('home')}
+              <MenuIcon size={24} />
             </button>
-            
-            {/* Mega Category Trigger */}
-            <div className="mega-menu-trigger group py-6 h-full flex items-center relative">
+
+            <div className="hidden lg:flex items-center gap-8 font-sans font-medium text-xs uppercase tracking-widest h-full">
               <button 
-                className={`flex items-center gap-1 bg-transparent border-none text-current cursor-pointer transition-colors hover:text-[#C4A478] ${
-                  currentTab === 'Shop' ? 'text-[#C4A478]' : ''
-                }`} 
-                onClick={() => handleCategoryClick('All')}
+                className={`bg-transparent border-none text-current cursor-pointer py-2 relative transition-colors hover:text-[#C4A478] ${
+                  currentTab === 'Home' ? 'border-b-2 border-[#C4A478] text-[#C4A478]' : ''
+                }`}
+                onClick={() => { setCurrentTab('Home'); setSelectedCategory('All'); setSelectedCollection('All'); }}
               >
-                <span>{t('shop')}</span>
+                {t('home')}
               </button>
-              {/* MEGA MENU CONTAINER */}
-              <div className="opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 absolute top-full left-1/2 -translate-x-1/2 w-[90vw] max-w-4xl bg-white border border-[#EAE3D9] shadow-xl p-8 z-50 grid grid-cols-4 gap-8">
-                <div>
-                  <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-4 pb-2 border-b border-[#FAF9F6]">
-                    {lang === 'EN' ? 'Store Categories' : 'فئات المتجر'}
-                  </h4>
-                  <ul className="flex flex-col gap-2.5">
-                    <li>
-                      <button 
-                        onClick={() => handleCategoryClick('Handmade Copper')}
-                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
-                      >
-                        {lang === 'EN' ? 'Handmade Copper' : 'النحاس الهاند ميد'}
-                      </button>
-                    </li>
-                    <li>
-                      <button 
-                        onClick={() => handleCategoryClick('Precious Stones')}
-                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
-                      >
-                        {lang === 'EN' ? 'Precious Stones' : 'الأحجار الكريمة الهاند ميد'}
-                      </button>
-                    </li>
-                    <li>
-                      <button 
-                        onClick={() => handleCategoryClick('Gift Boxes & Bundles')}
-                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
-                      >
-                        {lang === 'EN' ? 'Gift Boxes & Bundles' : 'الهدايا والبوكسات'}
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-4 pb-2 border-b border-[#FAF9F6]">
-                    {lang === 'EN' ? 'Subcategories' : 'أقسام فرعية'}
-                  </h4>
-                  <ul className="flex flex-col gap-2.5">
-                    <li>
-                      <button 
-                        onClick={() => { setSelectedCategory('All'); setSelectedCollection('All'); setCurrentTab('Shop'); }}
-                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
-                      >
-                        {t('all')}
-                      </button>
-                    </li>
-                    <li>
-                      <button 
-                        onClick={() => handleCategoryClick('Handmade Copper')}
-                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
-                      >
-                        {lang === 'EN' ? 'Copper Cuff' : 'أساور نحاس'}
-                      </button>
-                    </li>
-                    <li>
-                      <button 
-                        onClick={() => handleCategoryClick('Precious Stones')}
-                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
-                      >
-                        {lang === 'EN' ? 'Stone Rings' : 'خواتم مرصعة بالجرام'}
-                      </button>
-                    </li>
-                    <li>
-                      <button 
-                        onClick={() => handleCategoryClick('Gift Boxes & Bundles')}
-                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
-                      >
-                        {lang === 'EN' ? 'Premium Bundles' : 'بوكسات هدايا'}
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-4 pb-2 border-b border-[#FAF9F6]">
-                    {t('collections')}
-                  </h4>
-                  <ul className="flex flex-col gap-2.5">
-                    <li>
-                      <button 
-                        onClick={() => handleCollectionClick("Nature's Mosaic")}
-                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
-                      >
-                        {lang === 'EN' ? "Nature's Mosaic" : "فسيفساء الطبيعة"}
-                      </button>
-                    </li>
-                    <li>
-                      <button 
-                        onClick={() => handleCollectionClick("El Kawthar")}
-                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
-                      >
-                        {lang === 'EN' ? "El Kawthar" : "الكوثر"}
-                      </button>
-                    </li>
-                    <li>
-                      <button 
-                        onClick={() => handleCollectionClick("Oumy")}
-                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
-                      >
-                        {lang === 'EN' ? "Oumy" : "أمي"}
-                      </button>
-                    </li>
-                    <li>
-                      <button 
-                        onClick={() => handleCollectionClick("Calligraphy")}
-                        className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
-                      >
-                        {lang === 'EN' ? "Calligraphy" : "الخط العربي"}
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-                <div className="flex flex-col justify-between border-l border-[#EAE3D9] pl-6 rtl:border-l-0 rtl:border-r rtl:pr-6 rtl:pl-0">
+              
+              {/* Mega Category Trigger */}
+              <div className="mega-menu-trigger group py-6 h-full flex items-center relative">
+                <button 
+                  className={`flex items-center gap-1 bg-transparent border-none text-current cursor-pointer transition-colors hover:text-[#C4A478] ${
+                    currentTab === 'Shop' ? 'text-[#C4A478]' : ''
+                  }`} 
+                  onClick={() => handleCategoryClick('All')}
+                >
+                  <span>{t('shop')}</span>
+                </button>
+                {/* MEGA MENU CONTAINER */}
+                <div className="opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 absolute top-full left-1/2 -translate-x-1/2 w-[90vw] max-w-4xl bg-white border border-[#EAE3D9] shadow-xl p-8 z-50 grid grid-cols-4 gap-8">
                   <div>
-                    <h4 className="font-serif text-sm font-bold tracking-widest text-[#C4A478]">LAZULI</h4>
-                    <p className="text-[11px] text-gray-500 leading-relaxed mt-2 font-sans font-normal">
-                      {lang === 'EN' 
-                        ? 'A celebration of Egyptian heritage and traditional slow craftsmanship. Pure handmade copper meeting divine celestial semi-precious gemstones.' 
-                        : 'احتفاء بالتراث المصري وصياغة المعادن البطيئة. نحاس نقي مصنوع باليد يلتقي بأحجار كريمة طبيعية ساحرة.'}
-                    </p>
+                    <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-4 pb-2 border-b border-[#FAF9F6]">
+                      {lang === 'EN' ? 'Store Categories' : 'فئات المتجر'}
+                    </h4>
+                    <ul className="flex flex-col gap-2.5">
+                      <li>
+                        <button 
+                          onClick={() => handleCategoryClick('Handmade Copper')}
+                          className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                        >
+                          {lang === 'EN' ? 'Handmade Copper' : 'النحاس الهاند ميد'}
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          onClick={() => handleCategoryClick('Precious Stones')}
+                          className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                        >
+                          {lang === 'EN' ? 'Precious Stones' : 'الأحجار الكريمة الهاند ميد'}
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          onClick={() => handleCategoryClick('Gift Boxes & Bundles')}
+                          className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                        >
+                          {lang === 'EN' ? 'Gift Boxes & Bundles' : 'الهدايا والبوكسات'}
+                        </button>
+                      </li>
+                    </ul>
                   </div>
-                  <button 
-                    onClick={() => { setCurrentTab('Shop'); setSelectedCategory('All'); }}
-                    className="bg-transparent border-none text-[10px] font-semibold uppercase tracking-widest text-[#1C1A17] hover:text-[#C4A478] text-left rtl:text-right mt-4 flex items-center gap-1 font-sans cursor-pointer"
-                  >
-                    <span>{lang === 'EN' ? 'Explore Catalog' : 'استكشف المعرض'} →</span>
-                  </button>
+                  <div>
+                    <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-4 pb-2 border-b border-[#FAF9F6]">
+                      {lang === 'EN' ? 'Subcategories' : 'أقسام فرعية'}
+                    </h4>
+                    <ul className="flex flex-col gap-2.5">
+                      <li>
+                        <button 
+                          onClick={() => { setSelectedCategory('All'); setSelectedCollection('All'); setCurrentTab('Shop'); }}
+                          className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                        >
+                          {t('all')}
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          onClick={() => handleCategoryClick('Handmade Copper')}
+                          className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                        >
+                          {lang === 'EN' ? 'Copper Cuff' : 'أساور نحاس'}
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          onClick={() => handleCategoryClick('Precious Stones')}
+                          className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                        >
+                          {lang === 'EN' ? 'Stone Rings' : 'خواتم مرصعة بالجرام'}
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          onClick={() => handleCategoryClick('Gift Boxes & Bundles')}
+                          className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                        >
+                          {lang === 'EN' ? 'Premium Bundles' : 'بوكسات هدايا'}
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-4 pb-2 border-b border-[#FAF9F6]">
+                      {t('collections')}
+                    </h4>
+                    <ul className="flex flex-col gap-2.5">
+                      <li>
+                        <button 
+                          onClick={() => handleCollectionClick("Nature's Mosaic")}
+                          className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                        >
+                          {lang === 'EN' ? "Nature's Mosaic" : "فسيفساء الطبيعة"}
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          onClick={() => handleCollectionClick("El Kawthar")}
+                          className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                        >
+                          {lang === 'EN' ? "El Kawthar" : "الكوثر"}
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          onClick={() => handleCollectionClick("Oumy")}
+                          className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                        >
+                          {lang === 'EN' ? "Oumy" : "أمي"}
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          onClick={() => handleCollectionClick("Calligraphy")}
+                          className="bg-transparent border-none text-[#706C66] text-xs font-normal cursor-pointer transition-all hover:text-[#C4A478] hover:translate-x-1"
+                        >
+                          {lang === 'EN' ? "Calligraphy" : "الخط العربي"}
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="flex flex-col justify-between border-l border-[#EAE3D9] pl-6 rtl:border-l-0 rtl:border-r rtl:pr-6 rtl:pl-0">
+                    <div>
+                      <h4 className="font-serif text-sm font-bold tracking-widest text-[#C4A478]">LAZULI</h4>
+                      <p className="text-[11px] text-gray-500 leading-relaxed mt-2 font-sans font-normal">
+                        {lang === 'EN' 
+                          ? 'A celebration of Egyptian heritage and traditional slow craftsmanship. Pure handmade copper meeting divine celestial semi-precious gemstones.' 
+                          : 'احتفاء بالتراث المصري وصياغة المعادن البطيئة. نحاس نقي مصنوع باليد يلتقي بأحجار كريمة طبيعية ساحرة.'}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => { setCurrentTab('Shop'); setSelectedCategory('All'); }}
+                      className="bg-transparent border-none text-[10px] font-semibold uppercase tracking-widest text-[#1C1A17] hover:text-[#C4A478] text-left rtl:text-right mt-4 flex items-center gap-1 font-sans cursor-pointer"
+                    >
+                      <span>{lang === 'EN' ? 'Explore Catalog' : 'استكشف المعرض'} →</span>
+                    </button>
+                  </div>
                 </div>
               </div>
+
+              <button 
+                className={`bg-transparent border-none text-current cursor-pointer py-2 relative transition-colors hover:text-[#C4A478] ${
+                  currentTab === 'Orders' ? 'border-b-2 border-[#C4A478] text-[#C4A478]' : ''
+                }`}
+                onClick={() => { if (user) { setCurrentTab('Orders'); } else { setAuthOpen(true); } }}
+              >
+                {t('orders')}
+              </button>
             </div>
+          </div>
 
-            <button 
-              className={`bg-transparent border-none text-current cursor-pointer py-2 relative transition-colors hover:text-[#C4A478] ${
-                currentTab === 'Orders' ? 'border-b-2 border-[#C4A478] text-[#C4A478]' : ''
-              }`}
-              onClick={() => { if (user) { setCurrentTab('Orders'); } else { setAuthOpen(true); } }}
+          {/* Column 2: Brand Logo (Centered) */}
+          <div className="flex items-center justify-center">
+            <div 
+              className="flex flex-col items-center justify-center font-serif text-xl md:text-2xl font-bold tracking-[0.15em] cursor-pointer leading-none text-center" 
+              onClick={() => { setCurrentTab('Home'); setSelectedCategory('All'); setSelectedCollection('All'); }}
             >
-              {t('orders')}
-            </button>
+              <span className="text-current tracking-[0.2em] font-serif">LAZULI</span>
+              <span className="block font-sans text-[8px] tracking-[0.35em] mt-1 text-[#C4A478] font-bold uppercase">
+                COPPER & STONES
+              </span>
+            </div>
           </div>
 
-          {/* Center: Brand Logo */}
-          <div 
-            className="flex flex-col items-center justify-center font-serif text-xl md:text-2xl font-bold tracking-[0.15em] cursor-pointer leading-none text-center" 
-            onClick={() => { setCurrentTab('Home'); setSelectedCategory('All'); setSelectedCollection('All'); }}
-          >
-            <span className="text-current tracking-[0.2em] font-serif">LAZULI</span>
-            <span className="block font-sans text-[8px] tracking-[0.35em] mt-1 text-[#C4A478] font-bold uppercase">
-              COPPER & STONES
-            </span>
-          </div>
-
-          {/* Right: Actions */}
-          <div className="flex items-center gap-4 md:gap-6">
+          {/* Column 3: Actions (Aligned Right) */}
+          <div className="flex items-center justify-end gap-4 md:gap-6">
             
             {/* Bilingual Toggle Button! */}
             <button 

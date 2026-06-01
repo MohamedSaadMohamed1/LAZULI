@@ -104,7 +104,7 @@ export default function ProductDetails({
 
   return (
     <>
-      <div className="details-page-wrap section-container max-w-7xl mx-auto py-12 px-6 mt-20">
+      <div className="details-page-wrap section-container max-w-7xl mx-auto py-12 px-6 mt-0">
         
         {/* Navigation Breadcrumb */}
         <div className="breadcrumb text-xs uppercase tracking-widest text-gray-500 mb-8 flex gap-1">
