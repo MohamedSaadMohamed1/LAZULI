@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, ShoppingBag, Plus, Minus, Trash2, Gift } from 'lucide-react';
+import { Drawer, Button, Input, Progress, message } from 'antd';
+import { X, ShoppingBag, Plus, Minus, Trash2, Gift, Ticket } from 'lucide-react';
 
 export default function CartDrawer({ 
   isOpen, 
@@ -8,12 +9,15 @@ export default function CartDrawer({
   onUpdateQuantity, 
   onRemoveItem, 
   onCheckout,
+  appliedCoupon,
+  setAppliedCoupon,
   t,
   lang,
   getBilingualValue
 }) {
   const [giftNoteOpen, setGiftNoteOpen] = useState(false);
   const [giftMessage, setGiftMessage] = useState('');
+  const [couponCode, setCouponCode] = useState('');
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   
@@ -22,465 +26,232 @@ export default function CartDrawer({
   const progressPercent = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
   const neededForFreeShipping = FREE_SHIPPING_THRESHOLD - subtotal;
 
-  if (!isOpen) return null;
+  // Apply Coupon Code Logic
+  const handleApplyCoupon = () => {
+    const code = couponCode.trim().toUpperCase();
+    if (!code) return;
+
+    if (code === 'LAZULI10') {
+      setAppliedCoupon({ code: 'LAZULI10', discountPercent: 10 });
+      message.success(lang === 'EN' ? 'Coupon LAZULI10 applied (10% Discount)!' : 'تم تطبيق كوبون LAZULI10 (خصم 10%)!');
+    } else if (code === 'COPPER20') {
+      setAppliedCoupon({ code: 'COPPER20', discountPercent: 20 });
+      message.success(lang === 'EN' ? 'Coupon COPPER20 applied (20% Discount)!' : 'تم تطبيق كوبون COPPER20 (خصم 20%)!');
+    } else {
+      message.error(lang === 'EN' ? 'Invalid coupon code.' : 'كود الخصم غير صحيح.');
+    }
+    setCouponCode('');
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    message.info(lang === 'EN' ? 'Coupon removed.' : 'تم إزالة كوبون الخصم.');
+  };
+
+  const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  // Discount Calculation
+  const discountAmount = appliedCoupon ? (subtotal * appliedCoupon.discountPercent / 100) : 0;
+  const finalTotal = subtotal - discountAmount;
 
   return (
-    <>
-      <div className="cart-drawer-overlay" onClick={onClose}>
-        <div className="cart-drawer-panel" onClick={(e) => e.stopPropagation()}>
-          
-          {/* Drawer Header */}
-          <div className="cart-drawer-header">
-            <div className="cart-header-title">
-              <ShoppingBag size={20} />
-              <h2>{t('bagCount', { x: cartItems.reduce((a,b) => a+b.quantity, 0) })}</h2>
-            </div>
-            <button className="close-drawer-btn" onClick={onClose}>
-              <X size={24} />
-            </button>
-          </div>
-
-          {/* Dynamic Free Shipping Banner */}
-          {subtotal > 0 && (
-            <div className="shipping-bar-wrap">
-              {subtotal >= FREE_SHIPPING_THRESHOLD ? (
-                <p className="shipping-bar-text">{t('freeShippingUnlocked')}</p>
-              ) : (
-                <p className="shipping-bar-text">
-                  {t('addMoreFreeShipping', { x: neededForFreeShipping.toLocaleString() })}
-                </p>
-              )}
-              <div className="shipping-bar-track">
-                <div className="shipping-bar-fill" style={{ width: `${progressPercent}%` }}></div>
-              </div>
-            </div>
-          )}
-
-          {/* Cart Items List */}
-          <div className="cart-drawer-body">
-            {cartItems.length === 0 ? (
-              <div className="cart-empty-state">
-                <div className="empty-icon-wrap">
-                  <ShoppingBag size={48} strokeWidth={1} />
-                </div>
-                <h3>{t('emptyBag')}</h3>
-                <p>{t('emptyBagDesc')}</p>
-                <button className="btn-gold" style={{ marginTop: '2rem' }} onClick={onClose}>
-                  <span>{t('continueShopping')}</span>
-                </button>
-              </div>
+    <Drawer
+      title={
+        <div className="flex items-center gap-2 text-[#1C1A17]">
+          <ShoppingBag size={20} />
+          <h2 className="text-sm font-semibold uppercase tracking-widest">
+            {t('bagCount', { x: totalCartCount })}
+          </h2>
+        </div>
+      }
+      placement={lang === 'AR' ? 'left' : 'right'}
+      onClose={onClose}
+      open={isOpen}
+      width={480}
+      className="custom-cart-drawer"
+      bodyStyle={{ padding: 0 }}
+    >
+      <div className="flex flex-col h-full bg-[#FAF9F6] text-[#1C1A17]">
+        
+        {/* Dynamic Free Shipping Banner */}
+        {subtotal > 0 && (
+          <div className="shipping-bar-wrap px-8 py-4 border-b border-[#EAE3D9] bg-[#FAF8F4]">
+            {subtotal >= FREE_SHIPPING_THRESHOLD ? (
+              <p className="shipping-bar-text text-xs font-semibold text-brand-copper mb-2">{t('freeShippingUnlocked')}</p>
             ) : (
-              <div className="cart-items-list">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="cart-item-row">
-                    <img src={item.image} alt={getBilingualValue(item, 'name')} className="cart-item-img" />
-                    
-                    <div className="cart-item-details">
-                      <p className="cart-item-collection">{getBilingualValue(item, 'collection')}</p>
-                      <h4 className="cart-item-name">{getBilingualValue(item, 'name')}</h4>
-                      <p className="cart-item-price">{(item.price * item.quantity).toLocaleString()} {lang === 'EN' ? 'EGP' : 'ج.م'}</p>
-                      
-                      {/* Quantity Controls */}
-                      <div className="cart-item-actions">
-                        <div className="qty-selectors">
-                          <button 
-                            className="qty-btn"
-                            onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus size={12} />
-                          </button>
-                          <span className="qty-val">{item.quantity}</span>
-                          <button 
-                            className="qty-btn"
-                            onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                            disabled={item.quantity >= item.stock}
-                          >
-                            <Plus size={12} />
-                          </button>
-                        </div>
+              <p className="shipping-bar-text text-xs text-[#706C66] mb-2">
+                {t('addMoreFreeShipping', { x: neededForFreeShipping.toLocaleString() })}
+              </p>
+            )}
+            <Progress 
+              percent={progressPercent} 
+              showInfo={false} 
+              strokeColor={{
+                '0%': '#EAD8C0',
+                '100%': '#C4A478',
+              }}
+              status="active"
+            />
+          </div>
+        )}
 
-                        {/* Remove Button */}
-                        <button className="remove-item-btn" onClick={() => onRemoveItem(item.id)}>
-                          <Trash2 size={16} />
+        {/* Cart Items List */}
+        <div className="cart-drawer-body flex-grow overflow-y-auto px-8 py-6">
+          {cartItems.length === 0 ? (
+            <div className="cart-empty-state flex flex-col items-center justify-center h-full text-center">
+              <div className="empty-icon-wrap w-24 h-24 rounded-full border border-[#EAE3D9] flex items-center justify-center mb-6 text-gray-400">
+                <ShoppingBag size={44} strokeWidth={1} />
+              </div>
+              <h3 className="text-xl font-serif font-semibold mb-2">{t('emptyBag')}</h3>
+              <p className="text-sm text-[#706C66] max-w-xs">{t('emptyBagDesc')}</p>
+              <Button 
+                type="primary" 
+                className="mt-6 bg-[#1C1A17] hover:bg-brand-gold uppercase tracking-widest text-xs h-12 px-8 border-none"
+                onClick={onClose}
+              >
+                {t('continueShopping')}
+              </Button>
+            </div>
+          ) : (
+            <div className="cart-items-list flex flex-col gap-6">
+              {cartItems.map((item) => (
+                <div key={item.id} className="cart-item-row flex gap-4 pb-6 border-b border-[#EAE3D9]/60">
+                  <img src={item.image} alt={getBilingualValue(item, 'name')} className="cart-item-img w-20 h-24 object-cover border border-[#EAE3D9]/40 bg-[#FAF9F6]" />
+                  
+                  <div className="cart-item-details flex-grow flex flex-col justify-between">
+                    <div>
+                      <p className="cart-item-collection text-[10px] font-bold text-brand-gold uppercase tracking-widest">{getBilingualValue(item, 'collection')}</p>
+                      <h4 className="cart-item-name text-sm font-medium text-[#1C1A17] mt-1">{getBilingualValue(item, 'name')}</h4>
+                      <p className="cart-item-price text-xs font-semibold text-[#1C1A17] mt-1">
+                        {(item.price * item.quantity).toLocaleString()} {lang === 'EN' ? 'EGP' : 'ج.م'}
+                      </p>
+                    </div>
+                    
+                    {/* Quantity Controls */}
+                    <div className="cart-item-actions flex items-center justify-between mt-3">
+                      <div className="qty-selectors flex items-center border border-[#EAE3D9] bg-white">
+                        <button 
+                          className="qty-btn w-7 h-7 flex items-center justify-center text-gray-500 hover:text-brand-gold"
+                          onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <span className="qty-val w-6 text-center text-xs font-semibold">{item.quantity}</span>
+                        <button 
+                          className="qty-btn w-7 h-7 flex items-center justify-center text-gray-500 hover:text-brand-gold"
+                          onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                          disabled={item.quantity >= item.stock}
+                        >
+                          <Plus size={12} />
                         </button>
                       </div>
+
+                      {/* Remove Button */}
+                      <button className="remove-item-btn text-[#706C66] hover:text-red-500 transition-colors" onClick={() => onRemoveItem(item.id)}>
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Footer Billing & Actions */}
-          {cartItems.length > 0 && (
-            <div className="cart-drawer-footer">
-              {/* Premium Gift Toggle */}
-              <div className="gift-message-wrap">
-                <button 
-                  className={`gift-toggle-btn ${giftNoteOpen ? 'active' : ''}`}
-                  onClick={() => setGiftNoteOpen(!giftNoteOpen)}
-                >
-                  <Gift size={16} />
-                  <span>{t('giftWrap')}</span>
-                </button>
-                {giftNoteOpen && (
-                  <textarea 
-                    placeholder={t('giftPlaceholder')}
-                    value={giftMessage}
-                    onChange={(e) => setGiftMessage(e.target.value)}
-                    className="gift-note-textarea"
-                  />
-                )}
-              </div>
-
-              {/* Subtotal */}
-              <div className="bill-subtotal-row">
-                <span>{t('subtotal')}</span>
-                <strong>{subtotal.toLocaleString()} {lang === 'EN' ? 'EGP' : 'ج.م'}</strong>
-              </div>
-              <p className="bill-tax-notice">{t('taxNotice')}</p>
-              
-              <button 
-                className="btn-gold checkout-cta"
-                onClick={() => {
-                  onClose();
-                  onCheckout({ giftMessage });
-                }}
-              >
-                <span>{t('checkoutCta')}</span>
-              </button>
+                </div>
+              ))}
             </div>
           )}
-
         </div>
+
+        {/* Footer Billing & Actions */}
+        {cartItems.length > 0 && (
+          <div className="cart-drawer-footer px-8 py-6 border-t border-[#EAE3D9] bg-white">
+            
+            {/* Promo Code Input */}
+            <div className="coupon-code-wrap mb-4">
+              {appliedCoupon ? (
+                <div className="applied-coupon flex items-center justify-between bg-green-50 border border-green-200 px-3 py-2 text-xs text-green-700">
+                  <div className="flex items-center gap-2">
+                    <Ticket size={14} />
+                    <span>
+                      {appliedCoupon.code} ({appliedCoupon.discountPercent}% OFF)
+                    </span>
+                  </div>
+                  <button 
+                    onClick={handleRemoveCoupon} 
+                    className="text-xs font-bold text-red-500 hover:underline cursor-pointer"
+                  >
+                    {lang === 'EN' ? 'Remove' : 'إزالة'}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder={lang === 'EN' ? 'Coupon: LAZULI10' : 'كوبون الخصم: LAZULI10'}
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    className="text-xs border-[#EAE3D9] focus:border-brand-gold focus:ring-brand-gold h-10 rounded-none"
+                    prefix={<Ticket size={14} className="text-gray-400" />}
+                  />
+                  <Button 
+                    onClick={handleApplyCoupon}
+                    className="bg-[#1C1A17] text-white hover:bg-brand-gold h-10 px-4 rounded-none text-xs border-none font-semibold uppercase tracking-wider"
+                  >
+                    {lang === 'EN' ? 'Apply' : 'تطبيق'}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Premium Gift Toggle */}
+            <div className="gift-message-wrap mb-4">
+              <button 
+                className={`gift-toggle-btn flex items-center gap-2 text-xs font-medium ${giftNoteOpen ? 'text-brand-gold' : 'text-[#706C66]'} hover:text-brand-gold transition-colors`}
+                onClick={() => setGiftNoteOpen(!giftNoteOpen)}
+              >
+                <Gift size={16} />
+                <span>{t('giftWrap')}</span>
+              </button>
+              {giftNoteOpen && (
+                <textarea 
+                  placeholder={t('giftPlaceholder')}
+                  value={giftMessage}
+                  onChange={(e) => setGiftMessage(e.target.value)}
+                  className="gift-note-textarea w-full h-16 border border-[#EAE3D9] bg-[#FAF9F6] p-2 text-xs mt-2 outline-none focus:border-brand-gold transition-colors resize-none"
+                />
+              )}
+            </div>
+
+            {/* Subtotal & Totals */}
+            <div className="bill-subtotal-row flex items-center justify-between text-sm text-[#706C66] mb-1">
+              <span>{t('subtotal')}</span>
+              <span>{subtotal.toLocaleString()} {lang === 'EN' ? 'EGP' : 'ج.م'}</span>
+            </div>
+
+            {appliedCoupon && (
+              <div className="bill-discount-row flex items-center justify-between text-sm text-green-600 mb-1 font-semibold">
+                <span>{lang === 'EN' ? 'Discount' : 'الخصم'}</span>
+                <span>-{discountAmount.toLocaleString()} {lang === 'EN' ? 'EGP' : 'ج.م'}</span>
+              </div>
+            )}
+
+            <div className="bill-total-row flex items-center justify-between text-base font-bold text-[#1C1A17] border-t border-[#EAE3D9]/60 pt-2 mb-1">
+              <span>{lang === 'EN' ? 'Total' : 'المجموع'}</span>
+              <span className="text-lg text-brand-copper">{finalTotal.toLocaleString()} {lang === 'EN' ? 'EGP' : 'ج.م'}</span>
+            </div>
+            
+            <p className="bill-tax-notice text-[10px] text-[#706C66] mb-4 leading-relaxed">{t('taxNotice')}</p>
+            
+            <Button 
+              type="primary" 
+              className="btn-gold checkout-cta w-full h-12 bg-[#1C1A17] text-white hover:bg-brand-gold uppercase tracking-widest text-xs font-semibold border-none rounded-none"
+              onClick={() => {
+                onClose();
+                onCheckout({ giftMessage });
+              }}
+            >
+              {t('checkoutCta')}
+            </Button>
+          </div>
+        )}
+
       </div>
-
-      <style>{`
-        .cart-drawer-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.4);
-          backdrop-filter: blur(8px);
-          -webkit-backdrop-filter: blur(8px);
-          z-index: 300;
-          display: flex;
-          justify-content: flex-end;
-          animation: fade-in 0.3s ease-out;
-        }
-
-        .rtl-active.cart-drawer-overlay {
-          justify-content: flex-start;
-        }
-
-        .cart-drawer-panel {
-          width: 100%;
-          max-width: 480px;
-          height: 100%;
-          background: var(--bg-secondary);
-          box-shadow: var(--shadow-lg);
-          display: flex;
-          flex-direction: column;
-          position: relative;
-          z-index: 310;
-          animation: slide-in-right 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .rtl-active .cart-drawer-panel {
-          animation: slide-in-left-drawer 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .cart-drawer-header {
-          padding: 1.5rem 2rem;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border-bottom: 1px solid var(--border-color);
-        }
-
-        .cart-header-title {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          color: var(--text-primary);
-        }
-
-        .cart-header-title h2 {
-          font-size: 1.15rem;
-          font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .close-drawer-btn {
-          background: transparent;
-          border: none;
-          color: var(--text-primary);
-          cursor: pointer;
-          transition: var(--transition-snappy);
-        }
-
-        .close-drawer-btn:hover {
-          color: var(--gold-primary);
-        }
-
-        /* Shipping bar styles */
-        .shipping-bar-wrap {
-          padding: 1rem 2rem;
-          background: #FAF8F4;
-          border-bottom: 1px solid var(--border-color);
-        }
-
-        .shipping-bar-text {
-          font-size: 0.8rem;
-          color: var(--text-primary);
-          margin-bottom: 0.5rem;
-        }
-
-        .shipping-bar-track {
-          width: 100%;
-          height: 4px;
-          background: #EAE3D9;
-          border-radius: 2px;
-          overflow: hidden;
-        }
-
-        .shipping-bar-fill {
-          height: 100%;
-          background: var(--gold-gradient);
-          border-radius: 2px;
-          transition: width 0.5s ease-out;
-        }
-
-        /* Body and Items */
-        .cart-drawer-body {
-          flex-grow: 1;
-          overflow-y: auto;
-          padding: 2rem;
-        }
-
-        .cart-empty-state {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-          text-align: center;
-        }
-
-        .empty-icon-wrap {
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
-          border: 1px solid var(--border-color);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 1.5rem;
-          color: var(--text-secondary);
-        }
-
-        .cart-empty-state h3 {
-          font-size: 1.4rem;
-          font-weight: 500;
-          margin-bottom: 0.5rem;
-        }
-
-        .cart-empty-state p {
-          color: var(--text-secondary);
-          font-size: 0.9rem;
-          max-width: 250px;
-        }
-
-        .cart-items-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .cart-item-row {
-          display: flex;
-          gap: 1.25rem;
-          padding-bottom: 1.5rem;
-          border-bottom: 1px solid rgba(234, 227, 217, 0.5);
-        }
-
-        .cart-item-img {
-          width: 80px;
-          height: 100px;
-          object-fit: cover;
-          background: var(--bg-primary);
-          border: 1px solid rgba(234, 227, 217, 0.4);
-        }
-
-        .cart-item-details {
-          flex-grow: 1;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .cart-item-collection {
-          font-size: 0.65rem;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--gold-primary);
-          font-weight: 600;
-          margin-bottom: 0.25rem;
-        }
-
-        .cart-item-name {
-          font-family: 'Outfit', sans-serif;
-          font-size: 0.95rem;
-          font-weight: 500;
-          color: var(--text-primary);
-          margin-bottom: 0.25rem;
-        }
-
-        .cart-item-price {
-          font-size: 0.9rem;
-          font-weight: 600;
-          color: var(--text-primary);
-          margin-bottom: auto;
-        }
-
-        .cart-item-actions {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-top: 0.5rem;
-        }
-
-        .qty-selectors {
-          display: flex;
-          align-items: center;
-          border: 1px solid var(--border-color);
-          background: #FFFDFB;
-        }
-
-        .qty-btn {
-          background: transparent;
-          border: none;
-          width: 28px;
-          height: 28px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          color: var(--text-secondary);
-        }
-
-        .qty-btn:disabled {
-          opacity: 0.3;
-          cursor: not-allowed;
-        }
-
-        .qty-val {
-          width: 24px;
-          text-align: center;
-          font-size: 0.8rem;
-          font-weight: 600;
-        }
-
-        .remove-item-btn {
-          background: transparent;
-          border: none;
-          color: var(--text-secondary);
-          cursor: pointer;
-          transition: var(--transition-snappy);
-        }
-
-        .remove-item-btn:hover {
-          color: #D9534F;
-        }
-
-        /* Footer styles */
-        .cart-drawer-footer {
-          padding: 1.5rem 2rem;
-          border-top: 1px solid var(--border-color);
-          background: #FFFDFB;
-        }
-
-        .gift-message-wrap {
-          margin-bottom: 1.5rem;
-        }
-
-        .gift-toggle-btn {
-          background: transparent;
-          border: none;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          color: var(--text-secondary);
-          font-size: 0.8rem;
-          cursor: pointer;
-          font-weight: 500;
-          width: 100%;
-          text-align: inherit;
-        }
-
-        .gift-toggle-btn:hover, .gift-toggle-btn.active {
-          color: var(--gold-primary);
-        }
-
-        .gift-note-textarea {
-          width: 100%;
-          height: 60px;
-          border: 1px solid var(--border-color);
-          background: var(--bg-primary);
-          padding: 0.5rem;
-          font-size: 0.8rem;
-          margin-top: 0.5rem;
-          resize: none;
-        }
-
-        .bill-subtotal-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          font-size: 1.1rem;
-          margin-bottom: 0.25rem;
-        }
-
-        .bill-subtotal-row strong {
-          color: var(--text-primary);
-          font-size: 1.2rem;
-        }
-
-        .bill-tax-notice {
-          font-size: 0.75rem;
-          color: var(--text-secondary);
-          margin-bottom: 1.5rem;
-        }
-
-        .checkout-cta {
-          width: 100%;
-          height: 50px;
-        }
-
-        /* Slide in animations */
-        @keyframes slide-in-right {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-
-        @keyframes slide-in-left-drawer {
-          from { transform: translateX(-100%); }
-          to { transform: translateX(0); }
-        }
-
-        @media (max-width: 480px) {
-          .cart-drawer-panel {
-            max-width: 100%;
-          }
-          .cart-drawer-header, .shipping-bar-wrap, .cart-drawer-body, .cart-drawer-footer {
-            padding-left: 1.5rem;
-            padding-right: 1.5rem;
-          }
-        }
-      `}</style>
-    </>
+    </Drawer>
   );
 }

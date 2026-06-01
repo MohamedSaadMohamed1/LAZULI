@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { Slider, Switch, Button, Badge, Drawer, Select, Radio, Empty } from 'antd';
+import { SlidersHorizontal, Search, RotateCcw, X, ArrowUpDown } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
 export default function Shop({ 
@@ -18,17 +20,32 @@ export default function Shop({
   const [sortOption, setSortOption] = useState('default');
   const [stoneFilter, setStoneFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [priceRange, setPriceRange] = useState([0, 8000]); // Seeding prices up to 5000+
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+
+  // Monitor search query updates from Navbar autocomplete selection
+  useEffect(() => {
+    const handleQueryUpdate = () => {
+      const savedQuery = localStorage.getItem('lazuli_search_query') || '';
+      setSearchQuery(savedQuery);
+      localStorage.removeItem('lazuli_search_query');
+    };
+    window.addEventListener('search_query_updated', handleQueryUpdate);
+    handleQueryUpdate(); // Run once on mount in case query is already populated
+    return () => window.removeEventListener('search_query_updated', handleQueryUpdate);
+  }, []);
 
   // Reset stone filter when language changes to prevent invalid state
   useEffect(() => {
     setStoneFilter('All');
   }, [lang]);
 
-  // Collect unique stones for filter dynamically based on language!
+  // Collect unique stones for filter dynamically based on language
   const uniqueStones = useMemo(() => {
     const stones = products
       .map(p => getBilingualValue(p, 'stone'))
-      .filter(stone => stone && stone !== "None");
+      .filter(stone => stone && stone !== "None" && stone !== "Multi-Stone");
     return ['All', ...new Set(stones)];
   }, [products, lang]);
 
@@ -49,6 +66,14 @@ export default function Shop({
     // Filter by Stone Type (using dynamic bilingual match)
     if (stoneFilter && stoneFilter !== 'All') {
       result = result.filter(p => getBilingualValue(p, 'stone') === stoneFilter);
+    }
+
+    // Filter by Price Range Slider
+    result = result.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+
+    // Filter by In-Stock Switch
+    if (inStockOnly) {
+      result = result.filter(p => p.stock > 0);
     }
 
     // Filter by Search Query
@@ -72,122 +97,250 @@ export default function Shop({
     }
 
     return result;
-  }, [products, selectedCategory, selectedCollection, stoneFilter, searchQuery, sortOption, lang]);
+  }, [products, selectedCategory, selectedCollection, stoneFilter, priceRange, inStockOnly, searchQuery, sortOption, lang]);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedCategory !== 'All') count++;
+    if (selectedCollection !== 'All') count++;
+    if (stoneFilter !== 'All') count++;
+    if (inStockOnly) count++;
+    if (searchQuery.trim() !== '') count++;
+    if (priceRange[0] > 0 || priceRange[1] < 8000) count++;
+    return count;
+  }, [selectedCategory, selectedCollection, stoneFilter, inStockOnly, searchQuery, priceRange]);
 
   const handleResetFilters = () => {
     setSelectedCategory('All');
     setSelectedCollection('All');
     setStoneFilter('All');
     setSearchQuery('');
+    setPriceRange([0, 8000]);
+    setInStockOnly(false);
     setSortOption('default');
   };
 
+  // Shared Filters Form for Desktop Sidebar & Mobile Drawer
+  const renderFiltersContent = () => (
+    <div className="flex flex-col gap-6 text-[#1C1A17]">
+      
+      {/* Search Input widget */}
+      <div className="sidebar-search relative flex items-center bg-white border border-[#EAE3D9] px-3 py-2 w-full">
+        <Search size={16} className="text-[#706C66] mr-2 ml-2" />
+        <input 
+          type="text" 
+          placeholder={t('searchProducts')} 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full text-xs bg-transparent border-none outline-none focus:ring-0 text-[#1C1A17]"
+        />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-brand-gold">
+            <X size={14} />
+          </button>
+        )}
+      </div>
+
+      {/* Main Categories Section */}
+      <div className="filter-section">
+        <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-3 pb-2 border-b border-[#EAE3D9]">
+          {t('category')}
+        </h4>
+        <Radio.Group 
+          value={selectedCategory} 
+          onChange={(e) => { setSelectedCategory(e.target.value); setSelectedCollection('All'); }}
+          className="flex flex-col gap-2 w-full"
+        >
+          <Radio value="All" className="text-xs text-[#706C66] hover:text-brand-gold font-medium">{t('all')}</Radio>
+          <Radio value="Handmade Copper" className="text-xs text-[#706C66] hover:text-brand-gold font-medium">
+            {lang === 'EN' ? 'Handmade Copper' : 'النحاس الهاند ميد'}
+          </Radio>
+          <Radio value="Precious Stones" className="text-xs text-[#706C66] hover:text-brand-gold font-medium">
+            {lang === 'EN' ? 'Precious Stones' : 'الأحجار الكريمة الهاند ميد'}
+          </Radio>
+          <Radio value="Gift Boxes & Bundles" className="text-xs text-[#706C66] hover:text-brand-gold font-medium">
+            {lang === 'EN' ? 'Gift Boxes & Bundles' : 'الهدايا والبوكسات'}
+          </Radio>
+        </Radio.Group>
+      </div>
+
+      {/* Collections Section */}
+      <div className="filter-section">
+        <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-3 pb-2 border-b border-[#EAE3D9]">
+          {t('collections')}
+        </h4>
+        <Radio.Group 
+          value={selectedCollection} 
+          onChange={(e) => { setSelectedCollection(e.target.value); setSelectedCategory('All'); }}
+          className="flex flex-col gap-2 w-full"
+        >
+          <Radio value="All" className="text-xs text-[#706C66] hover:text-brand-gold font-medium">{t('all')}</Radio>
+          <Radio value="Nature's Mosaic" className="text-xs text-[#706C66] hover:text-brand-gold font-medium">
+            {lang === 'EN' ? "Nature's Mosaic" : "فسيفساء الطبيعة"}
+          </Radio>
+          <Radio value="El Kawthar" className="text-xs text-[#706C66] hover:text-brand-gold font-medium">
+            {lang === 'EN' ? "El Kawthar" : "الكوثر"}
+          </Radio>
+          <Radio value="Oumy" className="text-xs text-[#706C66] hover:text-brand-gold font-medium">
+            {lang === 'EN' ? "Oumy" : "أمي"}
+          </Radio>
+          <Radio value="Calligraphy" className="text-xs text-[#706C66] hover:text-brand-gold font-medium">
+            {lang === 'EN' ? "Calligraphy" : "الخط العربي"}
+          </Radio>
+        </Radio.Group>
+      </div>
+
+      {/* Precious Stones Section */}
+      <div className="filter-section">
+        <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-3 pb-2 border-b border-[#EAE3D9]">
+          {t('naturalStone')}
+        </h4>
+        <Select 
+          value={stoneFilter} 
+          onChange={setStoneFilter}
+          className="w-full text-xs"
+          dropdownClassName="custom-select-dropdown"
+        >
+          <Select.Option value="All">{t('all')}</Select.Option>
+          {uniqueStones.filter(s => s !== 'All').map((stone) => (
+            <Select.Option key={stone} value={stone}>{stone}</Select.Option>
+          ))}
+        </Select>
+      </div>
+
+      {/* Price Slider (Antd Slider) */}
+      <div className="filter-section">
+        <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#1C1A17] mb-3 pb-2 border-b border-[#EAE3D9] flex justify-between">
+          <span>{lang === 'EN' ? 'Price Range' : 'نطاق السعر'}</span>
+          <span className="text-brand-copper font-semibold">
+            {priceRange[0]} - {priceRange[1]} ج.م
+          </span>
+        </h4>
+        <Slider 
+          range 
+          min={0} 
+          max={8000} 
+          value={priceRange} 
+          onChange={setPriceRange}
+          trackStyle={{ backgroundColor: '#C4A478' }}
+          handleStyle={[{ borderColor: '#C4A478' }, { borderColor: '#C4A478' }]}
+        />
+      </div>
+
+      {/* Availability Switch */}
+      <div className="filter-section flex items-center justify-between border-t border-[#EAE3D9] pt-4">
+        <span className="text-xs font-semibold text-[#1C1A17] uppercase tracking-wider">
+          {lang === 'EN' ? 'In Stock Only' : 'المتوفر في المخزن فقط'}
+        </span>
+        <Switch 
+          checked={inStockOnly} 
+          onChange={setInStockOnly}
+          style={{ backgroundColor: inStockOnly ? '#D37F4B' : '#EAE3D9' }}
+        />
+      </div>
+
+      {/* Reset Button */}
+      {activeFiltersCount > 0 && (
+        <Button 
+          onClick={handleResetFilters}
+          icon={<RotateCcw size={14} />}
+          className="w-full h-11 border border-[#1C1A17] text-[#1C1A17] hover:bg-[#1C1A17] hover:text-white uppercase tracking-widest text-xs font-semibold rounded-none flex items-center justify-center gap-2 mt-4"
+        >
+          {t('resetFilters')}
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <>
-      <section className="shop-header">
-        <div className="shop-header-content">
-          <span className="section-subtitle">{t('fineCatalog')}</span>
-          <h2>{t('jewelryStore')}</h2>
-          <p>{t('jewelryStoreDesc')}</p>
+      {/* Editorial Header */}
+      <section className="shop-header bg-[#FAF8F4] border-b border-[#EAE3D9] py-20 px-8 text-center mt-[80px]">
+        <div className="shop-header-content max-w-xl mx-auto">
+          <span className="section-subtitle text-xs uppercase tracking-widest text-brand-gold font-bold mb-1 block">
+            {t('fineCatalog')}
+          </span>
+          <h2 className="text-4xl font-serif text-[#1C1A17] mb-3">{t('jewelryStore')}</h2>
+          <p className="text-sm text-[#706C66] leading-relaxed">{t('jewelryStoreDesc')}</p>
         </div>
       </section>
 
-      <section className="shop-body section-container">
-        {/* Filters Sidebar */}
-        <div className="shop-layout">
+      {/* MOBILE BAR FOR FILTER CONTROLS (Sticky) */}
+      <div className="mobile-filter-bar lg:hidden sticky top-[80px] bg-white/95 backdrop-blur-md border-b border-[#EAE3D9] py-3 px-6 z-40 flex items-center justify-between shadow-sm">
+        <Button 
+          onClick={() => setIsFilterDrawerOpen(true)}
+          className="flex items-center gap-2 h-10 px-4 border-[#C4A478] text-[#1C1A17] font-semibold text-xs uppercase tracking-widest rounded-none"
+        >
+          <SlidersHorizontal size={14} className="text-brand-gold" />
+          <span>{lang === 'EN' ? 'Filters' : 'تصفية الفلاتر'}</span>
+          <Badge count={activeFiltersCount} size="small" color="#D37F4B" />
+        </Button>
+
+        <div className="flex items-center gap-2">
+          <ArrowUpDown size={14} className="text-gray-400" />
+          <Select 
+            value={sortOption} 
+            onChange={setSortOption}
+            className="w-32 text-xs border-none"
+            dropdownClassName="custom-select-dropdown"
+          >
+            <Option value="default">{t('featured')}</Option>
+            <Option value="price-low">{t('priceLow')}</Option>
+            <Option value="price-high">{t('priceHigh')}</Option>
+            <Option value="name">{t('alphabetical')}</Option>
+          </Select>
+        </div>
+      </div>
+
+      <section className="shop-body section-container max-w-7xl mx-auto py-12 px-6">
+        <div className="shop-layout flex gap-12">
           
-          <aside className="shop-sidebar">
-            <div className="sidebar-search">
-              <input 
-                type="text" 
-                placeholder={t('searchProducts')} 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="sidebar-search-input"
-              />
-            </div>
-
-            <div className="filter-section">
-              <h4>{t('category')}</h4>
-              <div className="filter-list">
-                {['All', 'Earrings', 'Necklaces', 'Bracelets', 'Rings', 'Pins'].map((cat) => (
-                  <button 
-                    key={cat}
-                    className={selectedCategory === cat ? 'active' : ''}
-                    onClick={() => { setSelectedCategory(cat); setSelectedCollection('All'); }}
-                  >
-                    {cat === 'All' ? t('all') : cat === 'Earrings' ? t('earrings') : cat === 'Necklaces' ? t('necklaces') : cat === 'Bracelets' ? t('bracelets') : cat === 'Rings' ? t('rings') : t('pins')}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="filter-section">
-              <h4>{t('collections')}</h4>
-              <div className="filter-list">
-                {['All', "Nature's Mosaic", "El Kawthar", "Oumy", "Calligraphy"].map((coll) => (
-                  <button 
-                    key={coll}
-                    className={selectedCollection === coll ? 'active' : ''}
-                    onClick={() => { setSelectedCollection(coll); setSelectedCategory('All'); }}
-                  >
-                    {coll === 'All' ? t('all') : coll === "Nature's Mosaic" ? (lang === 'EN' ? "Nature's Mosaic" : "فسيفساء الطبيعة") : coll === 'El Kawthar' ? (lang === 'EN' ? "El Kawthar" : "الكوثر") : coll === 'Oumy' ? (lang === 'EN' ? "Oumy" : "أمي") : (lang === 'EN' ? "Calligraphy" : "الخط العربي")}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="filter-section">
-              <h4>{t('naturalStone')}</h4>
-              <div className="filter-list">
-                {uniqueStones.map((stone) => (
-                  <button 
-                    key={stone}
-                    className={stoneFilter === stone ? 'active' : ''}
-                    onClick={() => setStoneFilter(stone)}
-                  >
-                    {stone === 'All' ? t('all') : stone}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {(selectedCategory !== 'All' || selectedCollection !== 'All' || stoneFilter !== 'All' || searchQuery !== '') && (
-              <button className="clear-filters-btn" onClick={handleResetFilters}>
-                {t('resetFilters')}
-              </button>
-            )}
+          {/* DESKTOP SIDEBAR FILTERS */}
+          <aside className="shop-sidebar w-64 shrink-0 hidden lg:flex flex-col gap-6">
+            {renderFiltersContent()}
           </aside>
 
-          {/* Product Grid Area */}
-          <div className="shop-content-panel">
+          {/* CATALOG MAIN GRID */}
+          <div className="shop-content-panel flex-grow">
             
-            {/* Sort & Stats Bar */}
-            <div className="shop-utility-bar">
-              <span className="products-count">{t('showing')} <strong>{filteredProducts.length}</strong> {t('creations')}</span>
+            {/* Sort & Stats Bar (Desktop) */}
+            <div className="shop-utility-bar hidden lg:flex items-center justify-between pb-4 border-b border-[#EAE3D9] mb-8">
+              <span className="products-count text-xs text-[#706C66]">
+                {t('showing')} <strong className="text-[#1C1A17]">{filteredProducts.length}</strong> {t('creations')}
+              </span>
               
-              <div className="sort-wrapper">
-                <label>{t('sortBy')}</label>
-                <select value={sortOption} onChange={(e) => setSortOption(e.target.value)}>
-                  <option value="default">{t('featured')}</option>
-                  <option value="price-low">{t('priceLow')}</option>
-                  <option value="price-high">{t('priceHigh')}</option>
-                  <option value="name">{t('alphabetical')}</option>
-                </select>
+              <div className="sort-wrapper flex items-center gap-3">
+                <label className="text-xs uppercase tracking-widest text-[#706C66] font-semibold">{t('sortBy')}</label>
+                <Select 
+                  value={sortOption} 
+                  onChange={setSortOption}
+                  className="w-48 text-xs rounded-none"
+                  dropdownClassName="custom-select-dropdown"
+                >
+                  <Select.Option value="default">{t('featured')}</Select.Option>
+                  <Select.Option value="price-low">{t('priceLow')}</Select.Option>
+                  <Select.Option value="price-high">{t('priceHigh')}</Select.Option>
+                  <Select.Option value="name">{t('alphabetical')}</Select.Option>
+                </Select>
               </div>
             </div>
 
             {/* Catalog Grid */}
             {filteredProducts.length === 0 ? (
-              <div className="shop-empty-catalog">
-                <h3>{t('noMatch')}</h3>
-                <p>{t('noMatchDesc')}</p>
-                <button className="btn-gold" style={{ marginTop: '1.5rem' }} onClick={handleResetFilters}>
-                  <span>{t('resetFilters')}</span>
-                </button>
+              <div className="shop-empty-catalog py-20 text-center bg-white border border-[#EAE3D9]">
+                <Empty description={false} />
+                <h3 className="text-xl font-serif font-semibold mt-4 mb-2">{t('noMatch')}</h3>
+                <p className="text-sm text-[#706C66] mb-6">{t('noMatchDesc')}</p>
+                <Button 
+                  type="primary"
+                  onClick={handleResetFilters}
+                  className="bg-[#1C1A17] hover:bg-brand-gold text-white uppercase tracking-widest text-xs font-semibold h-11 px-8 rounded-none border-none"
+                >
+                  {t('resetFilters')}
+                </Button>
               </div>
             ) : (
-              <div className="products-grid">
+              <div className="products-grid grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10">
                 {filteredProducts.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -209,315 +362,93 @@ export default function Shop({
         </div>
       </section>
 
+      {/* MOBILE FILTER SLIDING DRAWER */}
+      <Drawer
+        title={
+          <div className="flex items-center justify-between w-full pr-4 text-[#1C1A17]">
+            <span className="text-sm font-semibold uppercase tracking-widest">{lang === 'EN' ? 'Refine Catalog' : 'تصفية المعروضات'}</span>
+            {activeFiltersCount > 0 && (
+              <button 
+                onClick={handleResetFilters} 
+                className="text-xs font-bold text-brand-copper hover:underline"
+              >
+                {lang === 'EN' ? 'Clear All' : 'مسح الكل'}
+              </button>
+            )}
+          </div>
+        }
+        placement={lang === 'AR' ? 'left' : 'right'}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        open={isFilterDrawerOpen}
+        width="100%"
+        className="mobile-filters-drawer"
+        bodyStyle={{ background: '#FAF9F6', padding: '2rem 1.5rem' }}
+      >
+        <div className="pb-10">
+          {renderFiltersContent()}
+          <Button 
+            type="primary"
+            onClick={() => setIsFilterDrawerOpen(false)}
+            className="w-full h-12 bg-brand-gold hover:bg-brand-gold-dark text-white uppercase tracking-widest text-xs font-semibold rounded-none border-none mt-8"
+          >
+            {lang === 'EN' ? 'Apply Filters' : 'تطبيق الفلاتر'}
+          </Button>
+        </div>
+      </Drawer>
+
       <style>{`
-        /* Shop Header */
-        .shop-header {
-          background: #FAF8F4;
-          border-bottom: 1px solid var(--border-color);
-          padding: 8rem 2rem 4rem;
-          text-align: center;
+        /* Dynamic overrides for Antd Slider, Switches inside Shop */
+        .ant-slider-track {
+          background-color: var(--gold-primary) !important;
+        }
+        .ant-slider-handle::after {
+          box-shadow: 0 0 0 2px var(--gold-primary) !important;
+        }
+        .ant-slider-handle:hover::after {
+          box-shadow: 0 0 0 4px var(--gold-primary) !important;
         }
 
-        .shop-header-content {
-          max-width: 600px;
-          margin: 0 auto;
+        .custom-select-dropdown {
+          border-radius: 0 !important;
+          font-family: 'Outfit', sans-serif !important;
         }
 
-        .shop-header h2 {
-          font-size: 2.8rem;
-          margin: 0.5rem 0 1rem;
-          color: var(--text-primary);
+        .ant-select-selector {
+          border-radius: 0 !important;
+          border-color: #EAE3D9 !important;
         }
 
-        .shop-header p {
-          color: var(--text-secondary);
-          font-size: 1rem;
+        .ant-select-focused .ant-select-selector,
+        .ant-select-selector:hover {
+          border-color: var(--gold-primary) !important;
         }
 
-        /* Shop Layout */
-        .shop-layout {
-          display: flex;
-          gap: 3.5rem;
-          margin-top: 1rem;
+        .ant-radio-wrapper span {
+          font-size: 0.8rem;
         }
 
-        .shop-sidebar {
-          width: 260px;
-          flex-shrink: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
+        .ant-radio-checked .ant-radio-inner {
+          border-color: var(--gold-primary) !important;
+          background-color: var(--gold-primary) !important;
         }
 
-        .sidebar-search-input {
-          width: 100%;
-          height: 42px;
-          border: 1px solid var(--border-color);
-          background: var(--bg-secondary);
-          padding: 0 1rem;
-          font-size: 0.85rem;
-          transition: var(--transition-smooth);
+        .ant-radio-inner::after {
+          background-color: #FFFFFF !important;
         }
 
-        .sidebar-search-input:focus {
-          border-color: var(--gold-primary);
-          box-shadow: 0 0 0 3px rgba(196, 164, 120, 0.1);
+        .ant-radio-wrapper:hover .ant-radio-inner {
+          border-color: var(--gold-primary) !important;
         }
 
-        .filter-section h4 {
-          font-size: 0.75rem;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--text-primary);
-          font-weight: 700;
-          margin-bottom: 1rem;
-          padding-bottom: 0.5rem;
-          border-bottom: 1px solid var(--border-color);
+        /* Mobile filters drawer custom close position */
+        .mobile-filters-drawer .ant-drawer-close {
+          order: 2;
+          margin-right: 0 !important;
+          margin-left: auto !important;
         }
-
-        .filter-list {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 0.6rem;
-        }
-
-        .filter-list button {
-          background: transparent;
-          border: none;
-          color: var(--text-secondary);
-          font-size: 0.9rem;
-          cursor: pointer;
-          font-family: inherit;
-          transition: var(--transition-snappy);
-          padding: 0.1rem 0;
-        }
-
-        .filter-list button:hover {
-          color: var(--gold-primary);
-        }
-
-        .rtl-active .filter-list button:hover {
-          padding-left: 0;
-          padding-right: 0.25rem;
-        }
-
-        .filter-list button.active {
-          color: var(--gold-primary);
-          font-weight: 600;
-        }
-
-        .filter-list button.active {
-          padding-left: 0.4rem;
-          border-left: 2px solid var(--gold-primary);
-        }
-
-        .rtl-active .filter-list button.active {
-          padding-left: 0;
-          padding-right: 0.4rem;
-          border-left: none;
-          border-right: 2px solid var(--gold-primary);
-        }
-
-        .clear-filters-btn {
-          background: transparent;
-          border: 1px solid var(--text-primary);
-          color: var(--text-primary);
-          font-size: 0.75rem;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 600;
-          padding: 0.7rem;
-          cursor: pointer;
-          text-align: center;
-          transition: var(--transition-snappy);
-        }
-
-        .clear-filters-btn:hover {
-          background: var(--text-primary);
-          color: var(--bg-secondary);
-        }
-
-        /* Content Panel */
-        .shop-content-panel {
-          flex-grow: 1;
-        }
-
-        .shop-utility-bar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding-bottom: 1.5rem;
-          border-bottom: 1px solid var(--border-color);
-          margin-bottom: 2.5rem;
-        }
-
-        .products-count {
-          font-size: 0.9rem;
-          color: var(--text-secondary);
-        }
-
-        .sort-wrapper {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          font-size: 0.85rem;
-        }
-
-        .sort-wrapper label {
-          color: var(--text-secondary);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 600;
-        }
-
-        .sort-wrapper select {
-          border: 1px solid var(--border-color);
-          background: var(--bg-secondary);
-          padding: 0.4rem 1.5rem 0.4rem 0.75rem;
-          border-radius: 0;
-          cursor: pointer;
-          font-family: inherit;
-        }
-
-        .sort-wrapper select:focus {
-          border-color: var(--gold-primary);
-        }
-
-        .shop-empty-catalog {
-          text-align: center;
-          padding: 6rem 2rem;
-          border: 1px solid var(--border-color);
-          background: var(--bg-secondary);
-        }
-
-        .shop-empty-catalog h3 {
-          font-size: 1.5rem;
-          font-weight: 500;
-          margin-bottom: 0.5rem;
-        }
-
-        .shop-empty-catalog p {
-          color: var(--text-secondary);
-          font-size: 0.95rem;
-        }
-
-        /* Responsive sidebar and Horizontal Scroll Pill Tags for Mobile */
-        @media (max-width: 992px) {
-          .shop-layout {
-            flex-direction: column;
-            gap: 1.5rem;
-          }
-          
-          .shop-sidebar {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            background: transparent;
-            padding: 0;
-            border: none;
-          }
-
-          .sidebar-search {
-            width: 100%;
-          }
-
-          .filter-section {
-            width: 100%;
-            margin-bottom: 0.5rem;
-          }
-
-          .filter-section h4 {
-            font-size: 0.7rem;
-            margin-bottom: 0.6rem;
-            border-bottom: none;
-            padding-bottom: 0;
-            color: var(--text-secondary);
-          }
-
-          .filter-list {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            width: 100%;
-            gap: 0.5rem;
-            padding-bottom: 0.6rem;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none; /* Hide scrollbar for Firefox */
-          }
-
-          .filter-list::-webkit-scrollbar {
-            display: none; /* Hide scrollbar for Chrome/Safari */
-          }
-
-          .sidebar-search-input {
-            height: 46px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-secondary);
-            padding: 0 1.2rem;
-            font-size: 0.9rem;
-            box-shadow: var(--shadow-sm);
-          }
-
-          .filter-list button {
-            flex-shrink: 0;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            padding: 0.45rem 1.4rem !important;
-            font-size: 0.75rem !important;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 500;
-            border-radius: 30px; /* Elegant rounded luxury pills */
-            transition: var(--transition-snappy);
-          }
-
-          .filter-list button:hover {
-            border-color: var(--gold-primary);
-            color: var(--gold-primary);
-          }
-
-          .filter-list button.active {
-            background: #FAF5EE !important;
-            border-color: var(--gold-primary) !important;
-            color: var(--gold-dark) !important;
-            font-weight: 600;
-            padding-left: 1.4rem !important;
-            padding-right: 1.4rem !important;
-            border-left: 1px solid var(--gold-primary) !important;
-          }
-
-          .rtl-active .filter-list button.active {
-            padding-left: 1.4rem !important;
-            padding-right: 1.4rem !important;
-            border-left: none !important;
-            border-right: 1px solid var(--gold-primary) !important;
-          }
-          
-          .clear-filters-btn {
-            width: 100%;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 0.5rem;
-            border-radius: 4px;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .shop-header h2 {
-            font-size: 2rem;
-          }
-          .shop-utility-bar {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
-          }
+        .rtl-active .mobile-filters-drawer .ant-drawer-close {
+          margin-left: 0 !important;
+          margin-right: auto !important;
         }
       `}</style>
     </>

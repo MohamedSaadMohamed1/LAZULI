@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Steps, Empty, Button, Spin } from 'antd';
 import { ShoppingBag, Loader, Package, AlertCircle } from 'lucide-react';
 import { getFirestoreDb, authInstance } from '../firebase/config';
 
@@ -26,13 +27,14 @@ export default function Orders({ setCurrentTab, t, lang, getBilingualValue }) {
     return gov ? (lang === 'EN' ? gov.name_en : gov.name_ar) : cityKey;
   };
 
-  const getStatusLabel = (status) => {
-    if (lang === 'AR') {
-      if (status === 'Pending') return 'قيد الانتظار';
-      if (status === 'Shipped') return 'تم الشحن';
-      if (status === 'Delivered') return 'تم التوصيل';
-    }
-    return status;
+  // Status index mapper for Antd Steps
+  const getStatusStepIndex = (status) => {
+    const s = status.toLowerCase();
+    if (s === 'pending') return 0;
+    if (s === 'processing') return 1;
+    if (s === 'shipped') return 2;
+    if (s === 'delivered') return 3;
+    return 0;
   };
 
   useEffect(() => {
@@ -67,72 +69,102 @@ export default function Orders({ setCurrentTab, t, lang, getBilingualValue }) {
     }
   };
 
+  // Steps Items definition
+  const getStepsItems = () => [
+    { title: lang === 'EN' ? 'Pending' : 'قيد الانتظار' },
+    { title: lang === 'EN' ? 'Processing' : 'قيد التجهيز' },
+    { title: lang === 'EN' ? 'Shipped' : 'تم الشحن' },
+    { title: lang === 'EN' ? 'Delivered' : 'تم التوصيل' }
+  ];
+
   return (
     <>
-      <div className="orders-page-wrap section-container">
-        <div className="orders-header">
-          <span className="section-subtitle">{t('customerPortal')}</span>
-          <h2>{t('myOrders')}</h2>
-          <p>{t('ordersDesc')}</p>
+      <div className="orders-page-wrap section-container max-w-4xl mx-auto py-12 px-6 mt-[80px]">
+        <div className="orders-header mb-12">
+          <span className="section-subtitle text-xs uppercase tracking-widest text-brand-gold font-bold mb-1 block">
+            {t('customerPortal')}
+          </span>
+          <h2 className="text-4xl font-serif text-[#1C1A17]">{t('myOrders')}</h2>
+          <p className="text-sm text-[#706C66] mt-2">{t('ordersDesc')}</p>
         </div>
 
         {loading ? (
-          <div className="orders-loader-wrap">
-            <Loader size={36} className="orders-spinner" />
-            <p>{lang === 'EN' ? 'Gathering your order records...' : 'جاري تجميع سجلات طلباتك...'}</p>
+          <div className="orders-loader-wrap text-center py-20">
+            <Spin size="large" className="custom-spin" />
+            <p className="text-xs text-[#706C66] mt-4 uppercase tracking-widest">{lang === 'EN' ? 'Gathering your order records...' : 'جاري تجميع سجلات طلباتك...'}</p>
           </div>
         ) : !user ? (
-          <div className="orders-empty-state">
-            <AlertCircle size={40} className="empty-icon" />
-            <h3>{t('authRequired')}</h3>
-            <p>{t('authRequiredDesc')}</p>
+          <div className="orders-empty-state text-center py-20 bg-white border border-[#EAE3D9] flex flex-col items-center">
+            <AlertCircle size={40} className="text-brand-gold mb-4" />
+            <h3 className="text-xl font-serif font-semibold mb-2">{t('authRequired')}</h3>
+            <p className="text-sm text-[#706C66] mb-6">{t('authRequiredDesc')}</p>
+            <Button 
+              onClick={() => setCurrentTab('Home')}
+              className="bg-[#1C1A17] text-white hover:bg-brand-gold uppercase tracking-widest text-xs font-semibold h-11 px-8 rounded-none border-none"
+            >
+              {lang === 'EN' ? 'Sign In' : 'تسجيل الدخول'}
+            </Button>
           </div>
         ) : orders.length === 0 ? (
-          <div className="orders-empty-state">
-            <ShoppingBag size={48} strokeWidth={1} className="empty-icon" />
-            <h3>{t('noOrders')}</h3>
-            <p>{t('noOrdersDesc')}</p>
-            <button className="btn-gold" style={{ marginTop: '1.5rem' }} onClick={() => setCurrentTab('Shop')}>
-              <span>{t('discoverColl')}</span>
-            </button>
+          <div className="orders-empty-state text-center py-20 bg-white border border-[#EAE3D9] flex flex-col items-center">
+            <ShoppingBag size={48} strokeWidth={1} className="text-gray-400 mb-4" />
+            <h3 className="text-xl font-serif font-semibold mb-2">{t('noOrders')}</h3>
+            <p className="text-sm text-[#706C66] mb-6">{t('noOrdersDesc')}</p>
+            <Button 
+              type="primary" 
+              className="bg-[#1C1A17] hover:bg-brand-gold text-white uppercase tracking-widest text-xs font-semibold h-11 px-8 rounded-none border-none"
+              onClick={() => setCurrentTab('Shop')}
+            >
+              {t('discoverColl')}
+            </Button>
           </div>
         ) : (
-          <div className="orders-list-wrap">
+          <div className="orders-list-wrap flex flex-col gap-8">
             {orders.map((o) => (
-              <div key={o.id} className="customer-order-card">
+              <div key={o.id} className="customer-order-card bg-white border border-[#EAE3D9] shadow-sm">
                 
                 {/* Card Top Details */}
-                <div className="order-card-header">
-                  <div className="header-col">
-                    <h5>{t('orderRef')}</h5>
-                    <h4>{o.trackingNumber}</h4>
+                <div className="order-card-header px-6 py-4 bg-[#FAF8F4] border-b border-[#EAE3D9] grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                  <div className="header-col text-xs">
+                    <h5 className="font-bold text-[10px] text-[#706C66] uppercase tracking-wider">{t('orderRef')}</h5>
+                    <h4 className="font-bold text-[#1C1A17] mt-1">{o.trackingNumber}</h4>
                   </div>
-                  <div className="header-col">
-                    <h5>{t('datePlaced')}</h5>
-                    <p>{o.date.split(',')[0]}</p>
+                  <div className="header-col text-xs">
+                    <h5 className="font-bold text-[10px] text-[#706C66] uppercase tracking-wider">{t('datePlaced')}</h5>
+                    <p className="text-[#1C1A17] mt-1">{o.date.split(',')[0]}</p>
                   </div>
-                  <div className="header-col">
-                    <h5>{t('totalDue')}</h5>
-                    <p className="order-price">{o.grandTotal.toLocaleString()} {lang === 'EN' ? 'EGP' : 'ج.م'}</p>
+                  <div className="header-col text-xs">
+                    <h5 className="font-bold text-[10px] text-[#706C66] uppercase tracking-wider">{t('totalDue')}</h5>
+                    <p className="order-price font-bold text-brand-copper mt-1">{o.grandTotal.toLocaleString()} ج.م</p>
                   </div>
-                  <div className="header-col align-right">
-                    <span className={`status-pill ${o.status.toLowerCase()}`}>
-                      {getStatusLabel(o.status)}
+                  <div className="header-col flex md:justify-end text-xs">
+                    <span className={`status-pill uppercase font-bold text-[9px] tracking-widest px-3 py-1 rounded-full text-white bg-brand-gold`}>
+                      {lang === 'EN' ? o.status : o.status === 'Pending' ? 'قيد المراجعة' : o.status === 'Processing' ? 'قيد التجهيز' : o.status === 'Shipped' ? 'تم الشحن' : 'تم التوصيل'}
                     </span>
                   </div>
                 </div>
 
+                {/* Card Delivery Status Timeline (Antd Steps Widget!) */}
+                <div className="order-card-timeline px-8 py-6 border-b border-[#EAE3D9]/60">
+                  <Steps 
+                    size="small"
+                    current={getStatusStepIndex(o.status)}
+                    items={getStepsItems()}
+                    className="custom-order-steps"
+                  />
+                </div>
+
                 {/* Card Items */}
-                <div className="order-card-body">
-                  <div className="ordered-items-list">
+                <div className="order-card-body p-6 border-b border-[#EAE3D9]/60">
+                  <div className="ordered-items-list flex flex-col gap-4">
                     {o.items.map((item, idx) => (
-                      <div key={idx} className="ordered-item-row">
-                        <img src={item.image} alt={getBilingualValue(item, 'name')} className="ordered-item-img" />
-                        <div>
-                          <h4>{getBilingualValue(item, 'name') || item.name}</h4>
-                          <p className="ordered-item-coll">{getBilingualValue(item, 'collection') || item.collection}</p>
-                          <span className="ordered-item-qty">
-                            {t('qty')}: {item.quantity} • {lang === 'EN' ? 'Price' : 'السعر'}: {item.price.toLocaleString()} {lang === 'EN' ? 'EGP' : 'ج.م'}
+                      <div key={idx} className="ordered-item-row flex gap-4 items-center">
+                        <img src={item.image} alt={getBilingualValue(item, 'name')} className="ordered-item-img w-12 h-14 object-cover border border-[#EAE3D9] bg-[#FAF9F6]" />
+                        <div className="text-xs">
+                          <h4 className="font-semibold text-brand-charcoal">{getBilingualValue(item, 'name')}</h4>
+                          <p className="ordered-item-coll text-[10px] text-brand-gold uppercase tracking-wider mt-0.5">{getBilingualValue(item, 'collection')}</p>
+                          <span className="ordered-item-qty text-gray-500 block mt-0.5">
+                            {t('qty')}: {item.quantity} • {lang === 'EN' ? 'Price' : 'السعر'}: {item.price.toLocaleString()} ج.م
                           </span>
                         </div>
                       </div>
@@ -140,10 +172,10 @@ export default function Orders({ setCurrentTab, t, lang, getBilingualValue }) {
                   </div>
                 </div>
 
-                {/* Card Bottom Delivery coords */}
-                <div className="order-card-footer">
-                  <div className="shipping-summary-row">
-                    <Package size={16} />
+                {/* Card Bottom Delivery Coordinates */}
+                <div className="order-card-footer px-6 py-3 bg-[#FFFDFB] text-xs text-[#706C66]">
+                  <div className="shipping-summary-row flex gap-2 items-start leading-relaxed">
+                    <Package size={16} className="text-brand-gold shrink-0 mt-0.5" />
                     <span>
                       {t('shippingVia', {
                         method: o.paymentMethod === 'cod' ? t('codCourier') : t('prepaidCourier'),
@@ -161,209 +193,39 @@ export default function Orders({ setCurrentTab, t, lang, getBilingualValue }) {
       </div>
 
       <style>{`
-        .orders-page-wrap {
-          padding-top: 8rem;
-          max-width: 1000px;
+        /* Antd Steps custom overrides inside orders tracker */
+        .custom-order-steps .ant-steps-item-title {
+          font-size: 0.7rem !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.05em !important;
+          font-weight: 700 !important;
+          color: var(--text-secondary) !important;
         }
 
-        .orders-header {
-          margin-bottom: 3.5rem;
+        .custom-order-steps .ant-steps-item-process .ant-steps-item-title {
+          color: var(--gold-primary) !important;
         }
 
-        .orders-header h2 {
-          font-size: 2.5rem;
-          margin-top: 0.5rem;
-          color: var(--text-primary);
+        .custom-order-steps .ant-steps-item-finish .ant-steps-item-icon {
+          border-color: var(--gold-primary) !important;
+          background-color: var(--gold-primary) !important;
         }
 
-        .orders-header p {
-          color: var(--text-secondary);
-          font-size: 1rem;
+        .custom-order-steps .ant-steps-item-finish .ant-steps-item-icon .ant-steps-icon {
+          color: #FFFFFF !important;
         }
 
-        .orders-loader-wrap {
-          text-align: center;
-          padding: 6rem 2rem;
-          color: var(--text-secondary);
+        .custom-order-steps .ant-steps-item-process .ant-steps-item-icon {
+          border-color: var(--gold-primary) !important;
+          background-color: var(--gold-primary) !important;
         }
 
-        .orders-spinner {
-          animation: spin 1s linear infinite;
-          color: var(--gold-primary);
-          margin-bottom: 1rem;
+        .custom-order-steps .ant-steps-item-process .ant-steps-item-icon .ant-steps-icon {
+          color: #FFFFFF !important;
         }
 
-        .orders-empty-state {
-          text-align: center;
-          padding: 6rem 2rem;
-          border: 1px solid var(--border-color);
-          background: var(--bg-secondary);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          color: var(--text-secondary);
-        }
-
-        .orders-empty-state h3 {
-          font-size: 1.4rem;
-          color: var(--text-primary);
-          margin: 1.25rem 0 0.5rem;
-        }
-
-        .orders-empty-state p {
-          font-size: 0.9rem;
-          max-width: 320px;
-        }
-
-        .empty-icon {
-          color: var(--text-secondary);
-        }
-
-        /* Order Cards */
-        .orders-list-wrap {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-        }
-
-        .customer-order-card {
-          background: var(--bg-secondary);
-          border: 1px solid var(--border-color);
-          box-shadow: var(--shadow-sm);
-        }
-
-        .order-card-header {
-          padding: 1.5rem 2rem;
-          background: #FAF8F4;
-          border-bottom: 1px solid var(--border-color);
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 1.5rem;
-          align-items: center;
-        }
-
-        .header-col h5 {
-          font-size: 0.65rem;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--text-secondary);
-          margin-bottom: 0.25rem;
-          font-weight: 700;
-        }
-
-        .header-col h4 {
-          font-family: 'Outfit', sans-serif;
-          font-size: 1rem;
-          font-weight: 700;
-          color: var(--text-primary);
-        }
-
-        .header-col p {
-          font-size: 0.85rem;
-          color: var(--text-primary);
-        }
-
-        .order-price {
-          font-weight: 600;
-        }
-
-        .align-right {
-          text-align: right;
-        }
-
-        .rtl-active .align-right {
-          text-align: left;
-        }
-
-        /* Items Body */
-        .order-card-body {
-          padding: 2rem;
-          border-bottom: 1px solid var(--border-color);
-        }
-
-        .ordered-items-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1.25rem;
-        }
-
-        .ordered-item-row {
-          display: flex;
-          gap: 1.25rem;
-          align-items: center;
-        }
-
-        .ordered-item-img {
-          width: 50px;
-          height: 62px;
-          object-fit: cover;
-          background: var(--bg-primary);
-          border: 1px solid var(--border-color);
-        }
-
-        .ordered-item-row h4 {
-          font-size: 0.9rem;
-          font-weight: 500;
-          color: var(--text-primary);
-          margin-bottom: 0.15rem;
-        }
-
-        .ordered-item-coll {
-          font-size: 0.65rem;
-          text-transform: uppercase;
-          color: var(--gold-primary);
-          letter-spacing: 0.05em;
-          margin-bottom: 0.1rem;
-        }
-
-        .ordered-item-qty {
-          font-size: 0.75rem;
-          color: var(--text-secondary);
-        }
-
-        /* Card Footer */
-        .order-card-footer {
-          padding: 1.2rem 2rem;
-          background: #FFFDFB;
-        }
-
-        .shipping-summary-row {
-          display: flex;
-          gap: 0.75rem;
-          align-items: flex-start;
-          font-size: 0.8rem;
-          color: var(--text-secondary);
-          line-height: 1.4;
-        }
-
-        .shipping-summary-row svg {
-          color: var(--gold-primary);
-          flex-shrink: 0;
-          margin-top: 0.1rem;
-        }
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 768px) {
-          .order-card-header {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-            padding: 1.2rem;
-          }
-          .align-right {
-            text-align: left;
-          }
-          .order-card-body {
-            padding: 1.2rem;
-          }
-          .order-card-footer {
-            padding: 1rem 1.2rem;
-          }
-          .orders-header h2 {
-            font-size: 1.8rem;
-          }
+        .custom-spin .ant-spin-dot-item {
+          background-color: var(--gold-primary) !important;
         }
       `}</style>
     </>

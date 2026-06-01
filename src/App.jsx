@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ConfigProvider, theme } from 'antd';
 import Navbar from './components/Navbar';
 import CartDrawer from './components/CartDrawer';
 import AuthModal from './components/AuthModal';
@@ -41,6 +42,9 @@ export default function App() {
   // Shop specific filters preserved globally for smooth layout transitions
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedCollection, setSelectedCollection] = useState('All');
+
+  // Promo Code / Discount State
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   // 1. Initial Seeding and Database Loading
   useEffect(() => {
@@ -187,6 +191,10 @@ export default function App() {
         image: product.image,
         collection_en: product.collection_en,
         collection_ar: product.collection_ar,
+        category_en: product.category_en,
+        category_ar: product.category_ar,
+        subcategory_en: product.subcategory_en,
+        subcategory_ar: product.subcategory_ar,
         stock: product.stock,
         quantity: Math.min(quantity, product.stock)
       });
@@ -224,6 +232,7 @@ export default function App() {
   const handleProductClick = (product) => {
     setSelectedProduct(product);
     setCurrentTab('Details');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBuyNow = (product, quantity = 1) => {
@@ -236,20 +245,57 @@ export default function App() {
     if (data && data.giftMessage) {
       setGiftMessage(data.giftMessage);
     }
+    setCartOpen(false);
     setCurrentTab('Checkout');
   };
 
   const handleClearCart = () => {
     saveCartState([]);
     setGiftMessage('');
+    setAppliedCoupon(null);
   };
 
   return (
-    <>
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#C4A478', // Luxurious Antique Gold
+          colorSuccess: '#D37F4B', // Copper Accent
+          colorBgBase: '#FAF9F6', // Alabaster Sand Cream
+          colorTextBase: '#1C1A17', // Charcoal Slate
+          fontFamily: "'Outfit', 'Playfair Display', sans-serif",
+          borderRadius: 0, // Sharp editorial luxury geometry
+        },
+        components: {
+          Button: {
+            borderRadius: 0,
+            controlHeight: 48,
+            fontFamily: "'Outfit', sans-serif",
+          },
+          Input: {
+            borderRadius: 0,
+            controlHeight: 48,
+          },
+          Select: {
+            borderRadius: 0,
+            controlHeight: 48,
+          },
+          Modal: {
+            borderRadius: 0,
+          },
+          Drawer: {
+            borderRadius: 0,
+          },
+          Table: {
+            borderRadius: 0,
+          }
+        }
+      }}
+    >
       {/* ⚠️ MOCK DEV ENVIRONMENT INDICATOR */}
       {isMockMode && (
         <div className="dev-mock-indicator">
-          <span>✨ {lang === 'EN' ? 'Local Mock Active' : 'المحاكاة المحلية نشطة'}</span>
+          <span>✨ {lang === 'EN' ? 'LAZULI Local Mock Active' : 'محاكاة لازولي المحلية نشطة'}</span>
         </div>
       )}
 
@@ -273,8 +319,8 @@ export default function App() {
         {loadingProducts ? (
           <div className="catalog-loading-panel">
             <span className="premium-spinner-indicator"></span>
-            <h3>LAZULI JEWELRY</h3>
-            <p>{lang === 'EN' ? 'Curating natural semi-precious stone catalog...' : 'جاري تحميل كتالوج الأحجار شبه الكريمة...'}</p>
+            <h3>LAZULI</h3>
+            <p>{lang === 'EN' ? 'Curating copper & precious stone catalog...' : 'جاري تحميل كتالوج النحاس والأحجار الكريمة...'}</p>
           </div>
         ) : (
           <>
@@ -332,6 +378,8 @@ export default function App() {
                 onClearCart={handleClearCart}
                 setCurrentTab={setCurrentTab}
                 giftMessage={giftMessage}
+                appliedCoupon={appliedCoupon}
+                setAppliedCoupon={setAppliedCoupon}
                 t={t}
                 lang={lang}
                 getBilingualValue={getBilingualValue}
@@ -371,6 +419,8 @@ export default function App() {
         onUpdateQuantity={handleUpdateCartQuantity}
         onRemoveItem={handleRemoveCartItem}
         onCheckout={handleCheckoutInitiate}
+        appliedCoupon={appliedCoupon}
+        setAppliedCoupon={setAppliedCoupon}
         t={t}
         lang={lang}
         getBilingualValue={getBilingualValue}
@@ -412,14 +462,6 @@ export default function App() {
         .rtl-active .product-card-badges {
           left: auto;
           right: 0.75rem;
-        }
-        .rtl-active .qty-picker button:first-child {
-          border-left: 1px solid var(--border-color);
-          border-right: none;
-        }
-        .rtl-active .qty-picker button:last-child {
-          border-right: 1px solid var(--border-color);
-          border-left: none;
         }
 
         /* Mock indicator styling */
@@ -487,6 +529,6 @@ export default function App() {
           to { transform: rotate(360deg); }
         }
       `}</style>
-    </>
+    </ConfigProvider>
   );
 }

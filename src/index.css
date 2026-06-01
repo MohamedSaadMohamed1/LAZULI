@@ -1,4 +1,18 @@
-/* Manolli Jewelry Reimagined - Premium Responsive Core CSS */
+@import "tailwindcss";
+
+@theme {
+  --color-brand-gold-light: #E7D7C1;
+  --color-brand-gold: #C4A478;
+  --color-brand-gold-dark: #A5855A;
+  --color-brand-copper-light: #E5A982;
+  --color-brand-copper: #D37F4B;
+  --color-brand-copper-dark: #B25D2B;
+  --color-brand-charcoal: #1C1A17;
+  --color-brand-cream: #FAF9F6;
+  
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Playfair Display', serif;
+}
 
 :root {
   /* Premium Visual Tokens */
