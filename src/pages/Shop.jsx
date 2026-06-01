@@ -254,8 +254,7 @@ export default function Shop({
 
   return (
     <>
-      {/* Editorial Header */}
-      <section className="bg-[#FAF8F4] border-b border-[#EAE3D9] py-16 md:py-24 px-6 md:px-8 text-center mt-0">
+      <section className="bg-[#FAF8F4] border-b border-[#EAE3D9] pt-32 pb-20 md:pt-40 md:pb-28 px-6 md:px-8 text-center mt-0">
         <div className="max-w-2xl mx-auto flex flex-col items-center justify-center text-center">
           <span className="text-[11px] uppercase tracking-[0.2em] text-[#C4A478] font-bold mb-2 block w-full text-center">
             {t('fineCatalog')}
