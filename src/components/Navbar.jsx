@@ -136,7 +136,7 @@ export default function Navbar({
             : 'bg-transparent border-b border-white/10 text-[#FAF8F5]'
         }`}
       >
-        <div className="max-w-7xl h-full mx-auto grid grid-cols-3 items-center px-6">
+        <div className="max-w-7xl h-full mx-auto grid grid-cols-3 items-center px-8 md:px-12">
           
           {/* Column 1: Links (Desktop) or Hamburger (Mobile) */}
           <div className="flex items-center justify-start h-full">
