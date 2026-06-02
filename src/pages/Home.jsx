@@ -144,21 +144,20 @@ export default function Home({
         </div>
       </section>
 
-      {/* 5. THE BRAND PILLARS (Now placed right above the footer!) */}
       <section className="pillars-section">
         <div className="pillars-container">
-          <div className="pillar-card">
-            <Sparkles size={32} strokeWidth={1} className="pillar-icon" />
+          <div className="pillar-card flex flex-col items-center text-center">
+            <Sparkles size={32} strokeWidth={1} className="pillar-icon mx-auto" />
             <h3>{t('naturalStones')}</h3>
             <p>{t('naturalStonesDesc')}</p>
           </div>
-          <div className="pillar-card">
-            <Compass size={32} strokeWidth={1} className="pillar-icon" />
+          <div className="pillar-card flex flex-col items-center text-center">
+            <Compass size={32} strokeWidth={1} className="pillar-icon mx-auto" />
             <h3>{t('heritageCraft')}</h3>
             <p>{t('heritageCraftDesc')}</p>
           </div>
-          <div className="pillar-card">
-            <ShieldCheck size={32} strokeWidth={1} className="pillar-icon" />
+          <div className="pillar-card flex flex-col items-center text-center">
+            <ShieldCheck size={32} strokeWidth={1} className="pillar-icon mx-auto" />
             <h3>{t('artisanIntegrity')}</h3>
             <p>{t('artisanIntegrityDesc')}</p>
           </div>
